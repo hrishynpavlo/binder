@@ -1,0 +1,7 @@
+# get app revision
+GET http://localhost:8080/app-revision HTTP/2.0
+
+###
+
+#get all users
+GET http://localhost:8080/user/list HTTP/2.0
