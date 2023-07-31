@@ -14,6 +14,15 @@ CREATE TABLE IF NOT EXISTS users (id BIGSERIAL PRIMARY KEY,
     geolocation POINT NOT NULL
 );
 
+CREATE TYPE interest AS ENUM ('Travel', 'Music', 'Books', 'Movies', 'Sport', 'Adventure', 'Pets', 'Animals', 'Food', 'Wine', 'Coffee', 'Drink', 'Walks', 'Hiking', 'Dancing', 'Gym', 'Tattoo' );
+
+CREATE TABLE IF NOT EXISTS user_interests (
+    id SERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    interests interest[] NOT NULL,
+    last_update TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
 CREATE OR REPLACE FUNCTION sp_create_user(
     email_param VARCHAR(512),
@@ -38,6 +47,20 @@ BEGIN
     RETURN new_user_id;
 END;
 $$ 
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION sp_update_user_interests(
+    user_id_param BIGINT,
+    interests_param interest[]
+) RETURNS BOOLEAN
+AS
+$$
+BEGIN
+    INSERT INTO user_interests (user_id, interests)
+    VALUES (user_id_param, interests_param);
+    RETURN true;
+END;
+$$
 LANGUAGE plpgsql;
 
 /*add fake data*/
@@ -71,6 +94,11 @@ BEGIN
     END LOOP;
 END;
 $$;
+
+CREATE OR REPLACE VIEW users_info AS 
+    SELECT u.id, u.email, u.first_name, u.last_name, u.display_name, u.date_of_birth, u.country, u.geolocation, ui.interests 
+    FROM public.users u 
+    LEFT JOIN public.user_interests ui ON ui.user_id = u.id;
 
 CREATE USER binder_usr WITH PASSWORD 'binder_best_app';
 

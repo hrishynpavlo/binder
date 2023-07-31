@@ -4,10 +4,10 @@ GET http://localhost:8080/app-revision HTTP/2.0
 ###
 
 #get all users
-GET http://localhost:8080/user/list HTTP/2.0
+GET http://localhost:8080/api/user/list HTTP/2.0
 
 ###
-POST http://localhost:8080/user HTTP/2.0
+POST http://localhost:8080/api/user HTTP/2.0
 content-type: application/json
 
 {
@@ -16,7 +16,16 @@ content-type: application/json
     "PasswordHash": "pwdhash",
     "DisplayName": "Sweety Ann",
     "Country": "US",
-    "Email": "anna.key123234131@testmail.com",
+    "Email": "anna.key{{$guid}}@testmail.com",
     "DateOfBirth": "2001-01-02",
     "Geolocation": "(41.866656420752399,-79.822251778096003)"
+}
+
+###
+PATCH http://localhost:8080/api/user-interests HTTP/2.0
+content-type: application/json
+
+{
+    "UserId": 135,
+    "Interests": [ "Pets", "Music", "Sport" ]
 }
