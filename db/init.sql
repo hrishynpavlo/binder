@@ -18,11 +18,26 @@ CREATE TYPE interest AS ENUM ('Travel', 'Music', 'Books', 'Movies', 'Sport', 'Ad
 
 CREATE TABLE IF NOT EXISTS user_interests (
     id SERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL UNIQUE,
     interests interest[] NOT NULL,
     last_update TIMESTAMP NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS user_photos(
+    id SERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE,
+    photo_urls TEXT[] NOT NULL,
+    last_update TIMESTAMP NOT NULL DEFAULT NOW(),
+    primary_photo_index SMALLINT DEFAULT 0,
+    CONSTRAINT fk_user_photo FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE OR REPLACE VIEW users_info AS 
+    SELECT u.id, u.email, u.first_name, u.last_name, u.display_name, u.date_of_birth, u.country, u.geolocation, ui.interests, up.photo_urls, up.primary_photo_index 
+    FROM public.users u 
+    LEFT JOIN public.user_interests ui ON ui.user_id = u.id
+    LEFT JOIN public.user_photos up ON up.user_id = u.id;
 
 CREATE OR REPLACE FUNCTION sp_create_user(
     email_param VARCHAR(512),
@@ -34,7 +49,7 @@ CREATE OR REPLACE FUNCTION sp_create_user(
     country_param VARCHAR(256),
     latitude_param NUMERIC,
     longitude_param NUMERIC
-) RETURNS BIGINT
+) RETURNS SETOF users_info
 AS
 $$
 DECLARE
@@ -44,7 +59,7 @@ BEGIN
     VALUES (email_param, password_hash_param, first_name_param, last_name_param, display_name_param, date_of_birth_param, country_param, POINT(latitude_param, longitude_param))
     RETURNING id INTO new_user_id;
 
-    RETURN new_user_id;
+    RETURN QUERY SELECT * FROM users_info WHERE id = new_user_id;
 END;
 $$ 
 LANGUAGE plpgsql;
@@ -52,13 +67,35 @@ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION sp_update_user_interests(
     user_id_param BIGINT,
     interests_param interest[]
-) RETURNS BOOLEAN
+) RETURNS SETOF users_info
 AS
 $$
 BEGIN
     INSERT INTO user_interests (user_id, interests)
-    VALUES (user_id_param, interests_param);
-    RETURN true;
+    VALUES (user_id_param, interests_param)
+    ON CONFLICT (user_id)
+    DO
+        UPDATE SET interests = interests_param, last_update = NOW();
+
+    RETURN QUERY SELECT * FROM users_info WHERE id = user_id_param;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION sp_update_user_photos(
+    user_id_param BIGINT,
+    photo_urls_param TEXT[]
+) RETURNS SETOF users_info
+AS
+$$
+BEGIN
+    INSERT INTO user_photos (user_id, photo_urls)
+    VALUES (user_id_param, photo_urls_param)
+    ON CONFLICT (user_id)
+    DO
+        UPDATE SET photo_urls = photo_urls_param, last_update = NOW();
+
+    RETURN QUERY SELECT * FROM users_info WHERE id = user_id_param;
 END;
 $$
 LANGUAGE plpgsql;
@@ -94,11 +131,6 @@ BEGIN
     END LOOP;
 END;
 $$;
-
-CREATE OR REPLACE VIEW users_info AS 
-    SELECT u.id, u.email, u.first_name, u.last_name, u.display_name, u.date_of_birth, u.country, u.geolocation, ui.interests 
-    FROM public.users u 
-    LEFT JOIN public.user_interests ui ON ui.user_id = u.id;
 
 CREATE USER binder_usr WITH PASSWORD 'binder_best_app';
 

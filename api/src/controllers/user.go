@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"binder_api/db"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,11 +12,6 @@ import (
 
 type UserController struct {
 	db *sqlx.DB
-}
-
-type UserInterestRequest struct {
-	UserId    int64
-	Interests []string
 }
 
 type CreateUserRequest struct {
@@ -28,11 +24,22 @@ type CreateUserRequest struct {
 	Country      string
 }
 
+type SetUserInterestRequest struct {
+	UserId    int64
+	Interests []string
+}
+
+type SetUserPhotosRequest struct {
+	UserId    int64
+	PhotoUrls []string
+}
+
 func (controller UserController) RegisterUserEndpoints(router *gin.Engine) {
 	api := router.Group("/api")
 	api.GET("/user/list", controller.GetUserList)
 	api.POST("/user", controller.CreateUser)
 	api.PATCH("/user-interests", controller.UpdateUserInterests)
+	api.PATCH("/user-photos", controller.UpdateUserPhoto)
 }
 
 func (controller UserController) GetUserList(c *gin.Context) {
@@ -50,23 +57,32 @@ func (controller UserController) CreateUser(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 	}
-	var userID int64
 	user := db.User{}
-	controller.db.Get(&userID, "SELECT sp_create_user($1, $2, $3, $4, $5, $6, $7, $8, $9)", req.Email, req.PasswordHash, req.FirstName, req.LastName, req.DisplayName, req.DateOfBirth, req.Country, -41, -89)
-	controller.db.Get(&user, "SELECT * FROM users_info WHERE id = $1", userID)
+	err := controller.db.Get(&user, "SELECT * FROM sp_create_user($1, $2, $3, $4, $5, $6, $7, $8, $9)", req.Email, req.PasswordHash, req.FirstName, req.LastName, req.DisplayName, req.DateOfBirth, req.Country, -41, -89)
+	if err != nil {
+		log.Fatal(err)
+	}
 	c.JSON(http.StatusCreated, user)
 }
 
 func (controller UserController) UpdateUserInterests(c *gin.Context) {
-	req := UserInterestRequest{}
+	req := SetUserInterestRequest{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+	}
+	user := db.User{}
+	controller.db.Get(&user, "SELECT * FROM sp_update_user_interests($1, $2)", req.UserId, pq.Array(req.Interests))
+	c.JSON(http.StatusOK, user)
+}
+
+func (controller UserController) UpdateUserPhoto(c *gin.Context) {
+	req := SetUserPhotosRequest{}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 	}
 
-	var isOk bool
-	controller.db.Get(&isOk, "SELECT sp_update_user_interests($1, $2)", req.UserId, pq.Array(req.Interests))
 	user := db.User{}
-	controller.db.Get(&user, "SELECT * FROM users_info WHERE id = $1", req.UserId)
+	controller.db.Get(&user, "SELECT * FROM sp_update_user_photos($1, $2)", req.UserId, pq.Array(req.PhotoUrls))
 	c.JSON(http.StatusOK, user)
 }
 

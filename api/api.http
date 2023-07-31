@@ -26,6 +26,15 @@ PATCH http://localhost:8080/api/user-interests HTTP/2.0
 content-type: application/json
 
 {
-    "UserId": 135,
+    "UserId": {{$randomInt 0 100}},
     "Interests": [ "Pets", "Music", "Sport" ]
+}
+
+###
+PATCH http://localhost:8080/api/user-photos HTTP/2.0
+content-type: application/json
+
+{
+    "UserId": {{$randomInt 0 100}},
+    "PhotoUrls": [ "https://images.unsplash.com/photo-1438761681033-6461ffad8d80", "https://images.unsplash.com/photo-1438761681033-6461ffad8d80" ]
 }
