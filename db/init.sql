@@ -1,7 +1,9 @@
 /*create database*/
+
 CREATE DATABASE binder_all;
 
 /*then switch to this database*/
+/* create tables, enums, views */
 
 CREATE TABLE IF NOT EXISTS users (id BIGSERIAL PRIMARY KEY,
     email VARCHAR(512) NOT NULL UNIQUE,
@@ -33,11 +35,24 @@ CREATE TABLE IF NOT EXISTS user_photos(
     CONSTRAINT fk_user_photo FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS user_filters(
+    id SERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE,
+    min_distance_km SMALLINT NOT NULL CONSTRAINT positive_min_distance CHECK(min_distance_km > 0),
+    max_distance_km SMALLINT NOT NULL CONSTRAINT positive_max_distance CHECK(max_distance_km > min_distance_km),
+    min_age SMALLINT NOT NULL CONSTRAINT positive_min_age CHECK(min_age > 10),
+    max_age SMALLINT NOT NULL CONSTRAINT positive_max_age CHECK(max_age > min_age AND max_age < 120),
+    CONSTRAINT fk_user_filters FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE OR REPLACE VIEW users_info AS 
-    SELECT u.id, u.email, u.first_name, u.last_name, u.display_name, u.date_of_birth, u.country, u.geolocation, ui.interests, up.photo_urls, up.primary_photo_index 
+    SELECT u.id, u.email, u.first_name, u.last_name, u.display_name, u.date_of_birth, u.country, u.geolocation, ui.interests, up.photo_urls, up.primary_photo_index, uf.min_distance_km, uf.max_distance_km, uf.min_age, uf.max_age
     FROM public.users u 
     LEFT JOIN public.user_interests ui ON ui.user_id = u.id
-    LEFT JOIN public.user_photos up ON up.user_id = u.id;
+    LEFT JOIN public.user_photos up ON up.user_id = u.id
+    LEFT JOIN public.user_filters uf ON uf.user_id = u.id;
+
+/* create sql functions to upsert data */
 
 CREATE OR REPLACE FUNCTION sp_create_user(
     email_param VARCHAR(512),
@@ -94,6 +109,27 @@ BEGIN
     ON CONFLICT (user_id)
     DO
         UPDATE SET photo_urls = photo_urls_param, last_update = NOW();
+
+    RETURN QUERY SELECT * FROM users_info WHERE id = user_id_param;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION sp_update_user_filters(
+    user_id_param BIGINT,
+    min_distance_km_param SMALLINT,
+    max_distance_km_param SMALLINT,
+    min_age_param SMALLINT,
+    max_age_param SMALLINT
+) RETURNS SETOF users_info
+AS
+$$
+BEGIN
+    INSERT INTO user_filters(user_id, min_distance_km, max_distance_km, min_age, max_age)
+    VALUES (user_id_param, min_distance_km_param, max_distance_km_param, min_age_param, max_age_param)
+    ON CONFLICT (user_id)
+    DO
+        UPDATE SET min_distance_km = min_distance_km_param, max_distance_km = max_distance_km_param, min_age = min_age_param, max_age = max_age_param;
 
     RETURN QUERY SELECT * FROM users_info WHERE id = user_id_param;
 END;

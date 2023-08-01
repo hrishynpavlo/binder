@@ -34,12 +34,21 @@ type SetUserPhotosRequest struct {
 	PhotoUrls []string
 }
 
+type SetUserFiltersRequest struct {
+	UserId        int64
+	MinDistanceKm int8
+	MaxDistanceKm int8
+	MinAge        int8
+	MaxAge        int8
+}
+
 func (controller UserController) RegisterUserEndpoints(router *gin.Engine) {
 	api := router.Group("/api")
 	api.GET("/user/list", controller.GetUserList)
 	api.POST("/user", controller.CreateUser)
 	api.PATCH("/user-interests", controller.UpdateUserInterests)
 	api.PATCH("/user-photos", controller.UpdateUserPhoto)
+	api.PATCH("/user-filters", controller.UpdateUserFilter)
 }
 
 func (controller UserController) GetUserList(c *gin.Context) {
@@ -83,6 +92,18 @@ func (controller UserController) UpdateUserPhoto(c *gin.Context) {
 
 	user := db.User{}
 	controller.db.Get(&user, "SELECT * FROM sp_update_user_photos($1, $2)", req.UserId, pq.Array(req.PhotoUrls))
+	c.JSON(http.StatusOK, user)
+}
+
+func (controller UserController) UpdateUserFilter(c *gin.Context) {
+	var req SetUserFiltersRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	var user db.User
+	controller.db.Get(&user, "SELECT * FROM sp_update_user_filters($1, $2, $3, $4, $5)", req.UserId, req.MinDistanceKm, req.MaxDistanceKm, req.MinAge, req.MaxAge)
 	c.JSON(http.StatusOK, user)
 }
 

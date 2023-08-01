@@ -1,6 +1,7 @@
 package main
 
 import (
+	"binder_api/configuration"
 	"binder_api/controllers"
 	"binder_api/db"
 
@@ -12,6 +13,7 @@ import (
 func main() {
 
 	app := fx.New(
+		fx.Provide(configuration.ProvideConfiguration),
 		fx.Provide(gin.Default),
 		fx.Provide(db.ProvideDb),
 		fx.Provide(controllers.ProvideAppController),

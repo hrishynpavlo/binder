@@ -1,6 +1,7 @@
 package db
 
 import (
+	"binder_api/configuration"
 	"database/sql"
 	"log"
 
@@ -11,9 +12,8 @@ type DB struct {
 	*sqlx.DB
 }
 
-func ProvideDb() *sqlx.DB {
-	connStr := "user=binder_usr password=binder_best_app dbname=binder_all sslmode=disable"
-	db, err := sqlx.Connect("postgres", connStr)
+func ProvideDb(config *configuration.AppConfiguration) *sqlx.DB {
+	db, err := sqlx.Connect("postgres", config.DbConnectionString)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -33,4 +33,8 @@ type User struct {
 	Interests         sql.NullString `db:"interests"`
 	PhotoUrls         sql.NullString `db:"photo_urls"`
 	PrimaryPhotoIndex sql.NullInt16  `db:"primary_photo_index"`
+	MinDistanceKm     sql.NullInt16  `db:"min_distance_km"`
+	MaxDistanceKm     sql.NullInt16  `db:"max_distance_km"`
+	MinAge            sql.NullInt16  `db:"min_age"`
+	MaxAge            sql.NullInt16  `db:"max_age"`
 }
