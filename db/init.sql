@@ -1,8 +1,8 @@
-/*create database*/
+/* create database */
 
 CREATE DATABASE binder_all;
 
-/*then switch to this database*/
+/* then switch to this database */
 /* create tables, enums, views */
 
 CREATE TABLE IF NOT EXISTS users (id BIGSERIAL PRIMARY KEY,
@@ -45,6 +45,29 @@ CREATE TABLE IF NOT EXISTS user_filters(
     CONSTRAINT fk_user_filters FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS subscription_plans(
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(128) NOT NULL UNIQUE,
+    description VARCHAR(512) NOT NULL,
+    display_name VARCHAR(256) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    is_active BOOLEAN NOT NULL,
+    refresh_period_in_hours SMALLINT,
+    matching_limit SMALLINT
+);
+
+CREATE TABLE IF NOT EXISTS user_subscriptions(
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL, 
+    subscription_plan_id INT NOT NULL, 
+    since TIMESTAMP NOT NULL DEFAULT NOW(),
+    is_active BOOLEAN NOT NULL,
+    start_period TIMESTAMP NOT NULL DEFAULT NOW(),
+    end_period TIMESTAMP NOT NULL,
+    CONSTRAINT fk_user_subscriptions_user FOREIGN KEY(user_id) REFERENCES users(id),
+    CONSTRAINT fk_user_subscriptions_subscription_plan FOREIGN KEY(subscription_plan_id) REFERENCES subscription_plans(id)
+);
+
 CREATE OR REPLACE VIEW users_info AS 
     SELECT u.id, u.email, u.first_name, u.last_name, u.display_name, u.date_of_birth, u.country, u.geolocation, ui.interests, up.photo_urls, up.primary_photo_index, uf.min_distance_km, uf.max_distance_km, uf.min_age, uf.max_age
     FROM public.users u 
@@ -70,9 +93,17 @@ $$
 DECLARE
     new_user_id BIGINT;
 BEGIN
-    INSERT INTO users (email, password_hash, first_name, last_name, display_name, date_of_birth, country, geolocation)
-    VALUES (email_param, password_hash_param, first_name_param, last_name_param, display_name_param, date_of_birth_param, country_param, POINT(latitude_param, longitude_param))
-    RETURNING id INTO new_user_id;
+    BEGIN
+        INSERT INTO users (email, password_hash, first_name, last_name, display_name, date_of_birth, country, geolocation)
+        VALUES (email_param, password_hash_param, first_name_param, last_name_param, display_name_param, date_of_birth_param, country_param, POINT(latitude_param, longitude_param))
+        RETURNING id INTO new_user_id;
+
+        INSERT INTO user_subscriptions (user_id, subscription_plan_id, is_active, end_period)
+        VALUES (new_user_id, 1, true, NOW() + INTERVAL '1 months');
+    EXCEPTION 
+        WHEN OTHERS THEN
+            RAISE;
+    END;
 
     RETURN QUERY SELECT * FROM users_info WHERE id = new_user_id;
 END;
@@ -138,6 +169,9 @@ LANGUAGE plpgsql;
 
 /*add fake data*/
 
+INSERT INTO subscription_plans (name, description, display_name, is_active, refresh_period_in_hours, matching_limit)
+VALUES ('BasePlan', 'Base subscription plan for newcomers', 'Base plan', true, 12, 100);
+
 DO
 $$
 DECLARE
@@ -152,14 +186,14 @@ DECLARE
     latitude NUMERIC;
     longitude NUMERIC;
 BEGIN
-    FOR i IN 1..100 LOOP
+    FOR i IN 1..500 LOOP
         email := 'user' || i || '@example.com';
         password_hash := md5(random()::text);
         first_name := (SELECT name FROM (VALUES ('Alice'), ('Emma'), ('Olivia'), ('Sophia'), ('Ava'), ('Isabella'), ('Mia'), ('Amelia'), ('Harper'), ('Evelyn')) AS female_names(name) OFFSET floor(random() * 10) LIMIT 1);
         last_name := (SELECT name FROM (VALUES ('Smith'), ('Johnson'), ('Brown'), ('Jones'), ('Miller'), ('Davis'), ('Garcia'), ('Rodriguez'), ('Martinez'), ('Hernandez')) AS surnames(name) OFFSET floor(random() * 10) LIMIT 1);
-        display_name := 'Display Name ' || i;
+        display_name := first_name || last_name;
         date_of_birth := DATE '1980-01-01' + (random() * 8000)::integer;
-        country := 'USA';
+        country := 'US';
         latitude := random() * 180 - 90;
         longitude := random() * 360 - 180;
 
@@ -168,7 +202,8 @@ BEGIN
 END;
 $$;
 
-CREATE USER binder_usr WITH PASSWORD 'binder_best_app';
+CREATE USER binder_app WITH PASSWORD 'binder_best_app';
 
-GRANT ALL ON ALL TABLES IN SCHEMA public TO binder_usr;
-GRANT ALL ON SCHEMA public TO binder_usr;
+GRANT SELECT, UPDATE, INSERT, REFERENCES ON ALL TABLES IN SCHEMA public TO binder_app;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO binder_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO binder_app; 

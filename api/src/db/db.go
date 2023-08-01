@@ -3,19 +3,21 @@ package db
 import (
 	"binder_api/configuration"
 	"database/sql"
-	"log"
 
 	"github.com/jmoiron/sqlx"
+	"go.uber.org/zap"
 )
 
 type DB struct {
 	*sqlx.DB
 }
 
-func ProvideDb(config *configuration.AppConfiguration) *sqlx.DB {
+func ProvideDb(logger *zap.Logger, config *configuration.AppConfiguration) *sqlx.DB {
 	db, err := sqlx.Connect("postgres", config.DbConnectionString)
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatal("Server can't connect to dabase",
+			zap.String("connection_string", config.DbConnectionString))
+		panic("EXIT")
 	}
 
 	return db
