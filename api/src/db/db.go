@@ -40,3 +40,14 @@ type User struct {
 	MinAge            sql.NullInt16  `db:"min_age"`
 	MaxAge            sql.NullInt16  `db:"max_age"`
 }
+
+type UserMatchingInfo struct {
+	UserId        int64         `db:"id"`
+	Latitude      float64       `db:"latitude"`
+	Longitude     float64       `db:"longitude"`
+	Age           int8          `db:"age"`
+	Interests     string        `db:"interests"`
+	MaxDistanceKm sql.NullInt16 `db:"max_distance_km"`
+	MinAge        sql.NullInt16 `db:"min_age"`
+	MaxAge        sql.NullInt16 `db:"max_age"`
+}

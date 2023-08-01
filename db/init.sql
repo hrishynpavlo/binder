@@ -75,6 +75,13 @@ CREATE OR REPLACE VIEW users_info AS
     LEFT JOIN public.user_photos up ON up.user_id = u.id
     LEFT JOIN public.user_filters uf ON uf.user_id = u.id;
 
+CREATE OR REPLACE VIEW user_matching AS 
+    SELECT u.id, u.geolocation[0] as latitude, u.geolocation[1] as longitude, date_part('years', age(u.date_of_birth)) as age, array_to_string(ui.interests, ',') as interests, uf.max_distance_km, uf.min_age, uf.max_age
+    FROM users u
+    LEFT JOIN public.user_interests ui ON ui.user_id = u.id
+    LEFT JOIN public.user_filters uf ON uf.user_id = u.id
+    WHERE ui.interests IS NOT NULL;
+
 /* create sql functions to upsert data */
 
 CREATE OR REPLACE FUNCTION sp_create_user(
