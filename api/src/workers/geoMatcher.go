@@ -2,6 +2,7 @@ package workers
 
 import (
 	"binder_api/configuration"
+	"binder_api/db"
 	"context"
 	"encoding/json"
 	"errors"
@@ -17,12 +18,13 @@ import (
 type GeoMatcherWorker struct {
 	logger                *zap.Logger
 	config                *configuration.AppConfiguration
+	repo                  *db.UserRepository
 	userRegisteredChannel chan UserRegisteredEvent
 	redis                 *redis.Client
 }
 
-func ProvideGeoMatcherWorker(logger *zap.Logger, config *configuration.AppConfiguration, userRegisteredChannel chan UserRegisteredEvent, redis *redis.Client) *GeoMatcherWorker {
-	return &GeoMatcherWorker{logger: logger, config: config, userRegisteredChannel: userRegisteredChannel, redis: redis}
+func ProvideGeoMatcherWorker(logger *zap.Logger, config *configuration.AppConfiguration, userRegisteredChannel chan UserRegisteredEvent, redis *redis.Client, repo *db.UserRepository) *GeoMatcherWorker {
+	return &GeoMatcherWorker{logger: logger, config: config, userRegisteredChannel: userRegisteredChannel, redis: redis, repo: repo}
 }
 
 func ProvideUserRegisteredChannel() chan UserRegisteredEvent {
@@ -50,6 +52,10 @@ func (worker GeoMatcherWorker) StartWorker() {
 
 		if len(location.Items) < 1 {
 			continue
+		}
+
+		if err := worker.repo.UpdateUserGeo(message.UserId, location.Items[0].Address.CountryCode, location.Items[0].Address.City, message.Latitude, message.Longitude); err != nil {
+			worker.logger.Error("Geo worker error during writing in db", zap.Error(err))
 		}
 
 		countryKey := location.Items[0].Address.CountryCode

@@ -79,6 +79,16 @@ func (repo UserRepository) UpdateUserFilter(userId int64, minDistanceKm int8, ma
 	return mapUser(user), nil
 }
 
+func (repo UserRepository) UpdateUserGeo(userId int64, countryCode string, city string, latitude float64, longitude float64) error {
+	_, err := repo.db.Exec("select sp_update_user_geo($1, $2, $3, $4, $5)", userId, countryCode, city, latitude, longitude)
+	if err != nil {
+		repo.logger.Error("UpdateUserGeo() failed", zap.Error(err), zap.Int64("user_id", userId))
+		return err
+	}
+
+	return nil
+}
+
 type Interest string
 
 const (

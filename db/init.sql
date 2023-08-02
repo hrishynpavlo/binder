@@ -68,6 +68,19 @@ CREATE TABLE IF NOT EXISTS user_subscriptions(
     CONSTRAINT fk_user_subscriptions_subscription_plan FOREIGN KEY(subscription_plan_id) REFERENCES subscription_plans(id)
 );
 
+CREATE TABLE IF NOT EXISTS user_geos(
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE,
+    country_code VARCHAR(3) NOT NULL,
+    city VARCHAR(128),
+    geolocation POINT NOT NULL,
+    last_modified TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_user_geo FOREIGN KEY(user_id) REFERENCES users(id)
+);
+
+CREATE INDEX idx_country_code ON user_geos (country_code);
+CREATE INDEX idx_city ON user_geos (city);
+
 CREATE OR REPLACE VIEW users_info AS 
     SELECT u.id, u.email, u.first_name, u.last_name, u.display_name, u.date_of_birth, u.country, u.geolocation, ui.interests, up.photo_urls, up.primary_photo_index, uf.min_distance_km, uf.max_distance_km, uf.min_age, uf.max_age
     FROM public.users u 
@@ -170,6 +183,22 @@ BEGIN
         UPDATE SET min_distance_km = min_distance_km_param, max_distance_km = max_distance_km_param, min_age = min_age_param, max_age = max_age_param;
 
     RETURN QUERY SELECT * FROM users_info WHERE id = user_id_param;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION sp_update_user_geo(
+    user_id_param BIGINT,
+    country_code_param VARCHAR(3),
+    city_param VARCHAR(128),
+    latitude_param NUMERIC,
+    longitude_param NUMERIC
+) RETURNS VOID
+AS
+$$
+BEGIN
+    INSERT INTO user_geos(user_id, country_code, city, geolocation)
+    VALUES(user_id_param, country_code_param, city_param, POINT(latitude_param, longitude_param));
 END;
 $$
 LANGUAGE plpgsql;
