@@ -20,7 +20,7 @@ func main() {
 		fx.Provide(logging.ProviderLogger),
 		fx.Provide(configuration.ProvideConfiguration),
 		fx.Provide(gin.Default),
-		fx.Provide(db.ProvideDb),
+		fx.Provide(db.ProvideDb, db.ProvideUserRepository),
 		fx.Provide(caching.ProvideRedis),
 		fx.Provide(controllers.ProvideAppController, controllers.ProvideUserController, controllers.ProvideControllers),
 		fx.Provide(workers.ProvideMatcherWorker, workers.ProvideUserRegisteredChannel, workers.ProvideGeoMatcherWorker),

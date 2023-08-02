@@ -6,14 +6,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 	"go.uber.org/zap"
 )
 
 type UserController struct {
-	db                    *sqlx.DB
 	logger                *zap.Logger
+	db                    *db.UserRepository
 	userRegisteredChannel chan workers.UserRegisteredEvent
 }
 
@@ -57,8 +55,7 @@ func (controller UserController) RegisterUserEndpoints(router *gin.Engine) {
 }
 
 func (controller UserController) GetUserList(c *gin.Context) {
-	users := []db.User{}
-	err := controller.db.Select(&users, "SELECT * FROM users_info")
+	users, err := controller.db.GetAllUsers()
 
 	if err != nil {
 		controller.logger.Warn("GetUserList() failed, see error", zap.Error(err))
@@ -73,14 +70,13 @@ func (controller UserController) CreateUser(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		controller.logger.Warn("CreateUser() wrong request body", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid body"})
+		return
 	}
-	user := db.User{}
-	err := controller.db.Get(&user, "SELECT * FROM sp_create_user($1, $2, $3, $4, $5, $6, $7, $8, $9)", req.Email, req.PasswordHash, req.FirstName, req.LastName, req.DisplayName, req.DateOfBirth, req.Country, req.Latitude, req.Longitude)
+
+	user, err := controller.db.CreateUser(req.Email, req.PasswordHash, req.FirstName, req.LastName, req.DisplayName, req.DateOfBirth, req.Country, req.Latitude, req.Longitude)
+
 	if err != nil {
-		controller.logger.Error("CreateUser() failed",
-			zap.Error(err),
-			zap.String("user_email", req.Email))
-		c.JSON(http.StatusBadRequest, gin.H{"message": "error"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": err})
 		return
 	}
 
@@ -95,13 +91,12 @@ func (controller UserController) UpdateUserInterests(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	user := db.User{}
-	if err := controller.db.Get(&user, "SELECT * FROM sp_update_user_interests($1, $2)",
-		req.UserId, pq.Array(req.Interests)); err != nil {
-		controller.logger.Error("UpdateUserInterests() failed", zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{})
+	user, err := controller.db.UpdateUserInterests(req.UserId, req.Interests)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
+
 	c.JSON(http.StatusOK, user)
 	return
 }
@@ -113,13 +108,13 @@ func (controller UserController) UpdateUserPhoto(c *gin.Context) {
 		return
 	}
 
-	user := db.User{}
-	if err := controller.db.Get(&user, "SELECT * FROM sp_update_user_photos($1, $2)",
-		req.UserId, pq.Array(req.PhotoUrls)); err != nil {
-		controller.logger.Error("UpdateUserPhoto() failed", zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{})
+	user, err := controller.db.UpdateUserPhoto(req.UserId, req.PhotoUrls)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
+
 	c.JSON(http.StatusOK, user)
 	return
 }
@@ -131,17 +126,16 @@ func (controller UserController) UpdateUserFilter(c *gin.Context) {
 		return
 	}
 
-	var user db.User
-	if err := controller.db.Get(&user, "SELECT * FROM sp_update_user_filters($1, $2, $3, $4, $5)",
-		req.UserId, req.MinDistanceKm, req.MaxDistanceKm, req.MinAge, req.MaxAge); err != nil {
-		controller.logger.Error("UpdateUserFilter() failed", zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{})
+	user, err := controller.db.UpdateUserFilter(req.UserId, req.MinDistanceKm, req.MaxDistanceKm, req.MinAge, req.MaxAge)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 	c.JSON(http.StatusOK, user)
 	return
 }
 
-func ProvideUserController(logger *zap.Logger, db *sqlx.DB, userRegisteredChannel chan workers.UserRegisteredEvent) *UserController {
-	return &UserController{db: db, logger: logger, userRegisteredChannel: userRegisteredChannel}
+func ProvideUserController(logger *zap.Logger, db *db.UserRepository, userRegisteredChannel chan workers.UserRegisteredEvent) *UserController {
+	return &UserController{logger: logger, db: db, userRegisteredChannel: userRegisteredChannel}
 }
