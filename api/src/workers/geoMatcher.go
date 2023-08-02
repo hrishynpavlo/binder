@@ -2,10 +2,14 @@ package workers
 
 import (
 	"binder_api/configuration"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/valyala/fasthttp"
 	"go.uber.org/zap"
 )
@@ -14,10 +18,11 @@ type GeoMatcherWorker struct {
 	logger                *zap.Logger
 	config                *configuration.AppConfiguration
 	userRegisteredChannel chan UserRegisteredEvent
+	redis                 *redis.Client
 }
 
-func ProvideGeoMatcherWorker(logger *zap.Logger, config *configuration.AppConfiguration, userRegisteredChannel chan UserRegisteredEvent) *GeoMatcherWorker {
-	return &GeoMatcherWorker{logger: logger, config: config, userRegisteredChannel: userRegisteredChannel}
+func ProvideGeoMatcherWorker(logger *zap.Logger, config *configuration.AppConfiguration, userRegisteredChannel chan UserRegisteredEvent, redis *redis.Client) *GeoMatcherWorker {
+	return &GeoMatcherWorker{logger: logger, config: config, userRegisteredChannel: userRegisteredChannel, redis: redis}
 }
 
 func ProvideUserRegisteredChannel() chan UserRegisteredEvent {
@@ -42,6 +47,18 @@ func (worker GeoMatcherWorker) StartWorker() {
 		}
 
 		worker.logger.Info("HERE api response", zap.Any("location", location))
+
+		if len(location.Items) < 1 {
+			continue
+		}
+
+		countryKey := location.Items[0].Address.CountryCode
+		city := strings.ReplaceAll(location.Items[0].Address.City, " ", "")
+		cityKey := fmt.Sprintf("%s:%s", countryKey, city)
+		userId := strconv.FormatInt(message.UserId, 10)
+
+		worker.redis.SAdd(context.Background(), countryKey, userId)
+		worker.redis.SAdd(context.Background(), cityKey, userId)
 	}
 }
 

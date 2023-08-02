@@ -18,8 +18,8 @@ content-type: application/json
     "Country": "US",
     "Email": "anna.key{{$guid}}@testmail.com",
     "DateOfBirth": "2001-01-02",
-    "Latitude": 40.730610,
-    "Longitude": -73.935242
+    "Latitude": {{$randomInt -90 90}},
+    "Longitude": {{$randomInt -180 180}}
 }
 
 ###
