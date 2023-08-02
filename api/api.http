@@ -18,7 +18,8 @@ content-type: application/json
     "Country": "US",
     "Email": "anna.key{{$guid}}@testmail.com",
     "DateOfBirth": "2001-01-02",
-    "Geolocation": "(41.866656420752399,-79.822251778096003)"
+    "Latitude": 40.730610,
+    "Longitude": -73.935242
 }
 
 ###

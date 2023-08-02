@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"binder_api/db"
+	"binder_api/workers"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,8 +12,9 @@ import (
 )
 
 type UserController struct {
-	db     *sqlx.DB
-	logger *zap.Logger
+	db                    *sqlx.DB
+	logger                *zap.Logger
+	userRegisteredChannel chan workers.UserRegisteredEvent
 }
 
 type CreateUserRequest struct {
@@ -23,6 +25,8 @@ type CreateUserRequest struct {
 	DisplayName  string
 	DateOfBirth  string
 	Country      string
+	Latitude     float64
+	Longitude    float64
 }
 
 type SetUserInterestRequest struct {
@@ -71,7 +75,7 @@ func (controller UserController) CreateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid body"})
 	}
 	user := db.User{}
-	err := controller.db.Get(&user, "SELECT * FROM sp_create_user($1, $2, $3, $4, $5, $6, $7, $8, $9)", req.Email, req.PasswordHash, req.FirstName, req.LastName, req.DisplayName, req.DateOfBirth, req.Country, -41, -89)
+	err := controller.db.Get(&user, "SELECT * FROM sp_create_user($1, $2, $3, $4, $5, $6, $7, $8, $9)", req.Email, req.PasswordHash, req.FirstName, req.LastName, req.DisplayName, req.DateOfBirth, req.Country, req.Latitude, req.Longitude)
 	if err != nil {
 		controller.logger.Error("CreateUser() failed",
 			zap.Error(err),
@@ -79,6 +83,9 @@ func (controller UserController) CreateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "error"})
 		return
 	}
+
+	event := workers.UserRegisteredEvent{UserId: user.Id, Latitude: req.Latitude, Longitude: req.Longitude}
+	controller.userRegisteredChannel <- event
 	c.JSON(http.StatusCreated, user)
 }
 
@@ -135,6 +142,6 @@ func (controller UserController) UpdateUserFilter(c *gin.Context) {
 	return
 }
 
-func ProvideUserController(logger *zap.Logger, db *sqlx.DB) *UserController {
-	return &UserController{db: db, logger: logger}
+func ProvideUserController(logger *zap.Logger, db *sqlx.DB, userRegisteredChannel chan workers.UserRegisteredEvent) *UserController {
+	return &UserController{db: db, logger: logger, userRegisteredChannel: userRegisteredChannel}
 }

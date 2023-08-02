@@ -7,7 +7,6 @@ import (
 	"binder_api/db"
 	"binder_api/logging"
 	"binder_api/workers"
-	"context"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
@@ -23,25 +22,20 @@ func main() {
 		fx.Provide(gin.Default),
 		fx.Provide(db.ProvideDb),
 		fx.Provide(caching.ProvideRedis),
-		fx.Provide(controllers.ProvideAppController),
-		fx.Provide(controllers.ProvideUserController),
-		fx.Provide(controllers.ProvideControllers),
-		fx.Provide(workers.ProvideMatcherWorker),
+		fx.Provide(controllers.ProvideAppController, controllers.ProvideUserController, controllers.ProvideControllers),
+		fx.Provide(workers.ProvideMatcherWorker, workers.ProvideUserRegisteredChannel, workers.ProvideGeoMatcherWorker),
 		fx.Invoke(startServer),
 	)
 
 	app.Run()
 }
 
-func startServer(logger *zap.Logger, controllers *controllers.Controllers, router *gin.Engine, matcher *workers.MatcherWorker) {
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+func startServer(logger *zap.Logger, controllers *controllers.Controllers, router *gin.Engine, matcher *workers.MatcherWorker, geoMatcher *workers.GeoMatcherWorker) {
 
 	controllers.RegisterAllEndpoints(router)
 	logger.Debug("All endpoints registered")
 
-	go matcher.Start(ctx)
+	go geoMatcher.StartWorker()
 
 	if err := router.Run(":8080"); err != nil {
 		logger.Fatal("ERROR on server start", zap.Error(err))
