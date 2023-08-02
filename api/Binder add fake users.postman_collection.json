@@ -1,0 +1,207 @@
+{
+	"info": {
+		"_postman_id": "6a5fd8f3-6756-439d-b853-9c36ae9b0994",
+		"name": "Binder add fake users",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "2514459"
+	},
+	"item": [
+		{
+			"name": "Create User",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const firstNames = [\r",
+							"  \"Emma\", \"Olivia\", \"Ava\", \"Isabella\", \"Sophia\", \r",
+							"  \"Mia\", \"Charlotte\", \"Amelia\", \"Harper\", \"Evelyn\",\r",
+							"  \"Abigail\", \"Emily\", \"Elizabeth\", \"Sofia\", \"Avery\",\r",
+							"  \"Ella\", \"Scarlett\", \"Grace\", \"Lily\", \"Chloe\",\r",
+							"  \"Victoria\", \"Aubrey\", \"Zoe\", \"Natalie\", \"Addison\",\r",
+							"  \"Lillian\", \"Brooklyn\", \"Lucy\", \"Hannah\", \"Layla\"\r",
+							"];\r",
+							"\r",
+							"const lastNames = [\"Smith\", \"Johnson\", \"Williams\", \"Brown\", \"Taylor\",\r",
+							"  \"Miller\", \"Wilson\", \"Moore\", \"Anderson\", \"Thomas\",\r",
+							"  \"Jackson\", \"White\", \"Harris\", \"Martin\", \"Thompson\",\r",
+							"  \"Garcia\", \"Martinez\", \"Robinson\", \"Clark\", \"Rodriguez\",\r",
+							"  \"Lewis\", \"Lee\", \"Walker\", \"Hall\", \"Allen\",\r",
+							"  \"Young\", \"Hernandez\", \"King\", \"Wright\", \"Lopez\"\r",
+							"];\r",
+							"\r",
+							"const nickNames = [ \"Sweety\", \"Crazy\", \"Hot\", \"Incredible\", \"Wild\", \"Spicy\", \"Funky\", \"Trendy\" ];\r",
+							"\r",
+							"const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];\r",
+							"const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];\r",
+							"const nickName = nickNames[Math.floor(Math.random() * nickNames.length)];\r",
+							"\r",
+							"function getRandomBirthDate() {\r",
+							"  const minAge = 17;\r",
+							"  const maxAge = 40;\r",
+							"\r",
+							"  const currentDate = new Date();\r",
+							"\r",
+							"  const minYear = currentDate.getFullYear() - maxAge;\r",
+							"  const maxYear = currentDate.getFullYear() - minAge;\r",
+							"\r",
+							"  const randomYear = Math.floor(Math.random() * (maxYear - minYear + 1)) + minYear;\r",
+							"\r",
+							"  const randomMonth = Math.floor(Math.random() * 12);\r",
+							"\r",
+							"  const randomDay = Math.floor(Math.random() * (new Date(randomYear, randomMonth + 1, 0).getDate())) + 1;\r",
+							"\r",
+							"  return new Date(randomYear, randomMonth, randomDay).toISOString().slice(0, 10);\r",
+							"}\r",
+							"\r",
+							"function getRandomLocation() {\r",
+							"  const latitudeMin = 24.396308;\r",
+							"  const latitudeMax = 49.384358;\r",
+							"  const longitudeMin = -125.000000;\r",
+							"  const longitudeMax = -66.934570;\r",
+							"\r",
+							"  const latitude = (Math.random() * (latitudeMax - latitudeMin) + latitudeMin);\r",
+							"  const longitude = (Math.random() * (longitudeMax - longitudeMin) + longitudeMin);\r",
+							"\r",
+							"  return { latitude, longitude };\r",
+							"}\r",
+							"\r",
+							"const dateOfBirth = getRandomBirthDate();\r",
+							"const { latitude, longitude } = getRandomLocation();\r",
+							"\r",
+							"pm.variables.set(\"firstName\", firstName);\r",
+							"pm.variables.set(\"lastName\", lastName);\r",
+							"pm.variables.set(\"nickName\", nickName);\r",
+							"pm.variables.set(\"dateOfBirth\", dateOfBirth);\r",
+							"pm.variables.set(\"latitude\", latitude);\r",
+							"pm.variables.set(\"longitude\", longitude);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();\r",
+							"pm.environment.set(\"userId\", response.Id);\r",
+							"\r",
+							"let index = Number(pm.collectionVariables.get(\"index\"));\r",
+							"++index;\r",
+							"pm.collectionVariables.set(\"index\", index);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"FirstName\": \"{{firstName}}\",\r\n    \"LastName\": \"{{lastName}}\",\r\n    \"PasswordHash\": \"31ae4fea241222fd2a7dab1a134ef397\",\r\n    \"DisplayName\": \"{{nickName}} {{firstName}}\",\r\n    \"Country\": \"USA\",\r\n    \"Email\": \"user{{index}}@example.com\",\r\n    \"DateOfBirth\": \"{{dateOfBirth}}\",\r\n    \"Latitude\": {{latitude}},\r\n    \"Longitude\": {{longitude}}\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/user",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add interests",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"function getRandomInterests() {\r",
+							"    var allInterests = ['Travel', 'Music', 'Books', 'Movies', 'Sport', 'Adventure', 'Pets', 'Animals', 'Food', 'Wine', 'Coffee', 'Drink', 'Walks', 'Hiking', 'Dancing', 'Gym', 'Tattoo'];\r",
+							"  var number = Math.floor(Math.random() * 5) + 3;\r",
+							"\r",
+							"  var shuffled = allInterests.slice(0);\r",
+							"  for (var i = shuffled.length - 1; i > 0; i--) {\r",
+							"      var j = Math.floor(Math.random() * (i + 1));\r",
+							"      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; \r",
+							"  }\r",
+							"\r",
+							"  return shuffled.slice(0, number);\r",
+							"}\r",
+							"\r",
+							"let interests = getRandomInterests();\r",
+							"console.log(\"interests:\", interests)\r",
+							"pm.environment.set(\"interests\", JSON.stringify(interests));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"UserId\": {{userId}},\r\n    \"Interests\": {{interests}}\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/user-interests",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"user-interests"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "index",
+			"value": "0",
+			"type": "string"
+		}
+	]
+}

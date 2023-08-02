@@ -32,6 +32,17 @@ func (repo UserRepository) GetAllUsers() ([]UserDTO, error) {
 	return users, nil
 }
 
+func (repo UserRepository) GetUserById(userId int64) (UserDTO, error) {
+	var user User
+	err := repo.db.Get(&user, "SELECT * FROM users_info where id = $1", userId)
+	if err != nil {
+		repo.logger.Error("GetUserById() error", zap.Error(err))
+		return UserDTO{}, errors.New("database error")
+	}
+
+	return mapUser(user), nil
+}
+
 func (repo UserRepository) CreateUser(email string, passwordHash string, firstName string, lastName string, displayName string, dateOfBirth string, country string, latitude float64, longitude float64) (UserDTO, error) {
 	user := User{}
 	err := repo.db.Get(&user, "SELECT * FROM sp_create_user($1, $2, $3, $4, $5, $6, $7, $8, $9)",

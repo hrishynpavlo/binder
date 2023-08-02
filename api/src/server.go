@@ -8,6 +8,7 @@ import (
 	"binder_api/logging"
 	"binder_api/workers"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 	"go.uber.org/fx"
@@ -32,6 +33,7 @@ func main() {
 
 func startServer(logger *zap.Logger, controllers *controllers.Controllers, router *gin.Engine, matcher *workers.MatcherWorker, geoMatcher *workers.GeoMatcherWorker) {
 
+	router.Use(cors.Default())
 	controllers.RegisterAllEndpoints(router)
 	logger.Debug("All endpoints registered")
 

@@ -4,6 +4,7 @@ import (
 	"binder_api/db"
 	"binder_api/workers"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -48,6 +49,7 @@ type SetUserFiltersRequest struct {
 func (controller UserController) RegisterUserEndpoints(router *gin.Engine) {
 	api := router.Group("/api")
 	api.GET("/user/list", controller.GetUserList)
+	api.GET("/user/:id", controller.GetUser)
 	api.POST("/user", controller.CreateUser)
 	api.PATCH("/user-interests", controller.UpdateUserInterests)
 	api.PATCH("/user-photos", controller.UpdateUserPhoto)
@@ -132,6 +134,19 @@ func (controller UserController) UpdateUserFilter(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
+	c.JSON(http.StatusOK, user)
+	return
+}
+
+func (controller UserController) GetUser(c *gin.Context) {
+	idParam := c.Param("id")
+	id, _ := strconv.ParseInt(idParam, 10, 64)
+	user, err := controller.db.GetUserById(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
 	c.JSON(http.StatusOK, user)
 	return
 }
