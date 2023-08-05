@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS user_subscriptions(
     is_active BOOLEAN NOT NULL,
     start_period TIMESTAMP NOT NULL DEFAULT NOW(),
     end_period TIMESTAMP NOT NULL,
-    CONSTRAINT fk_user_subscriptions_user FOREIGN KEY(user_id) REFERENCES users(id),
+    CONSTRAINT fk_user_subscriptions_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_user_subscriptions_subscription_plan FOREIGN KEY(subscription_plan_id) REFERENCES subscription_plans(id)
 );
 
@@ -72,13 +72,15 @@ CREATE TABLE IF NOT EXISTS user_geos(
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL UNIQUE,
     country_code VARCHAR(3) NOT NULL,
+    state_code VARCHAR(128),
     city VARCHAR(128),
     geolocation POINT NOT NULL,
     last_modified TIMESTAMP NOT NULL DEFAULT NOW(),
-    CONSTRAINT fk_user_geo FOREIGN KEY(user_id) REFERENCES users(id)
+    CONSTRAINT fk_user_geo FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_country_code ON user_geos (country_code);
+CREATE INDEX idx_state_code ON user_geos(state_code);
 CREATE INDEX idx_city ON user_geos (city);
 
 CREATE OR REPLACE VIEW users_info AS 
@@ -190,6 +192,7 @@ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION sp_update_user_geo(
     user_id_param BIGINT,
     country_code_param VARCHAR(3),
+    state_code_param VARCHAR(128),
     city_param VARCHAR(128),
     latitude_param NUMERIC,
     longitude_param NUMERIC
@@ -197,8 +200,11 @@ CREATE OR REPLACE FUNCTION sp_update_user_geo(
 AS
 $$
 BEGIN
-    INSERT INTO user_geos(user_id, country_code, city, geolocation)
-    VALUES(user_id_param, country_code_param, city_param, POINT(latitude_param, longitude_param));
+    INSERT INTO user_geos(user_id, country_code, state_code, city, geolocation)
+    VALUES(user_id_param, country_code_param, state_code_param, city_param, POINT(latitude_param, longitude_param))
+    ON CONFLICT (user_id)
+    DO
+        UPDATE SET geolocation = POINT(latitude_param, longitude_param);
 END;
 $$
 LANGUAGE plpgsql;

@@ -55,15 +55,29 @@
 							"}\r",
 							"\r",
 							"function getRandomLocation() {\r",
-							"  const latitudeMin = 24.396308;\r",
-							"  const latitudeMax = 49.384358;\r",
-							"  const longitudeMin = -125.000000;\r",
-							"  const longitudeMax = -66.934570;\r",
+							"    const states = {\r",
+							"        \"New York\": {\r",
+							"            lat: { min: 40.477399, max: 45.01585 },\r",
+							"            lng: { min: -79.762590, max: -71.852345 }\r",
+							"        },\r",
+							"        \"California\": {\r",
+							"            lat: { min: 32.5121, max: 42.0126 },\r",
+							"            lng: { min: -124.6509, max: -114.1312 }\r",
+							"        },\r",
+							"        \"Washington\": {\r",
+							"            lat: { min: 45.543541, max: 49.002494 },\r",
+							"            lng: { min: -124.848974, max: -116.916031 }\r",
+							"        }\r",
+							"    };\r",
 							"\r",
-							"  const latitude = (Math.random() * (latitudeMax - latitudeMin) + latitudeMin);\r",
-							"  const longitude = (Math.random() * (longitudeMax - longitudeMin) + longitudeMin);\r",
+							"    const stateNames = Object.keys(states);\r",
+							"    const randomStateName = stateNames[Math.floor(Math.random() * stateNames.length)];\r",
+							"    const randomState = states[randomStateName];\r",
 							"\r",
-							"  return { latitude, longitude };\r",
+							"    const lat = Math.random() * (randomState.lat.max - randomState.lat.min) + randomState.lat.min;\r",
+							"    const lng = Math.random() * (randomState.lng.max - randomState.lng.min) + randomState.lng.min;\r",
+							"\r",
+							"    return { latitude: lat, longitude: lng};\r",
 							"}\r",
 							"\r",
 							"const dateOfBirth = getRandomBirthDate();\r",
@@ -171,6 +185,62 @@
 					"path": [
 						"api",
 						"user-interests"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add photos",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"function getRandomPhoto(){\r",
+							"    var allPhotos = [ \"https://images.unsplash.com/photo-1438761681033-6461ffad8d80\", \"https://images.pexels.com/photos/1391498/pexels-photo-1391498.jpeg\",\r",
+							"    \"https://images.unsplash.com/photo-1509967419530-da38b4704bc6\", \"https://images.unsplash.com/photo-1531746020798-e6953c6e8e04\",\r",
+							"    \"https://images.unsplash.com/photo-1579610520129-963c74781ffb\", \"https://images.unsplash.com/photo-1580566059042-9b5771d31fcb\",\r",
+							"    \"https://images.unsplash.com/photo-1567532939604-b6b5b0db2604\", \"https://images.unsplash.com/photo-1605691408200-534bee0d52c1\",\r",
+							"    \"https://images.unsplash.com/photo-1534528741775-53994a69daeb\", \"https://images.unsplash.com/photo-1616002411355-49593fd89721\",\r",
+							"    \"https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e\", \"https://plus.unsplash.com/premium_photo-1670006474124-a23db3cde1b9\",\r",
+							"    \"https://images.unsplash.com/photo-1525786210598-d527194d3e9a\", \"https://images.unsplash.com/photo-1554151228-14d9def656e4\",\r",
+							"    \"https://images.unsplash.com/photo-1604072366595-e75dc92d6bdc\", \"https://images.unsplash.com/photo-1610642434250-392436bd9fba\" ];\r",
+							"\r",
+							"    const randomIndex = Math.floor(Math.random() * 15);\r",
+							"\r",
+							"    return [  allPhotos[randomIndex] ];\r",
+							"}\r",
+							"\r",
+							"const randomPhoto = getRandomPhoto();\r",
+							"pm.variables.set(\"photoUrls\", JSON.stringify(randomPhoto));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"UserId\": {{userId}},\r\n    \"PhotoUrls\": {{photoUrls}}\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/user-photos",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"user-photos"
 					]
 				}
 			},

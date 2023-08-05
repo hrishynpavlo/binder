@@ -90,14 +90,27 @@ func (repo UserRepository) UpdateUserFilter(userId int64, minDistanceKm int8, ma
 	return mapUser(user), nil
 }
 
-func (repo UserRepository) UpdateUserGeo(userId int64, countryCode string, city string, latitude float64, longitude float64) error {
-	_, err := repo.db.Exec("select sp_update_user_geo($1, $2, $3, $4, $5)", userId, countryCode, city, latitude, longitude)
+func (repo UserRepository) UpdateUserGeo(userId int64, countryCode string, stateCode string, city string, latitude float64, longitude float64) error {
+	_, err := repo.db.Exec("select sp_update_user_geo($1, $2, $3, $4, $5, $6)", userId, countryCode, stateCode, city, latitude, longitude)
 	if err != nil {
 		repo.logger.Error("UpdateUserGeo() failed", zap.Error(err), zap.Int64("user_id", userId))
 		return err
 	}
 
 	return nil
+}
+
+func (repo UserRepository) GetUserFeed(userId int64) ([]UserDTO, error) {
+	var dbUsers []User
+	if err := repo.db.Select(&dbUsers, "with user_location as (select ug.country_code, ug.state_code, ug.city from user_geos ug where ug.user_id = 52), feed_users as (select ug.user_id, ug.geolocation from user_geos ug where ug.country_code in (select ul.country_code from user_location ul) and ug.state_code in (select ul.state_code from user_location ul) and ug.city in (select ul.city from user_location ul) and ug.user_id <> 52) select ui.id, ui.email, ui.first_name, ui.last_name, ui.display_name, ui.date_of_birth, ui.country, fu.geolocation, ui.interests, ui.photo_urls, ui.primary_photo_index, ui.min_distance_km, ui.max_distance_km, ui.min_age, ui.max_age from users_info ui join feed_users fu on fu.user_id = ui.id;", userId); err != nil {
+		return nil, err
+	}
+
+	users := make([]UserDTO, len(dbUsers))
+	for i, dbUser := range dbUsers {
+		users[i] = mapUser(dbUser)
+	}
+	return users, nil
 }
 
 type Interest string
