@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
 import { BinderApiService } from './binder-api-service';
 
 @Component({
@@ -10,13 +9,21 @@ import { BinderApiService } from './binder-api-service';
 export class UserFeedComponent implements OnInit {
   userId: number;
   user: any;
+  feed: any[];
 
-  constructor(private route: ActivatedRoute, private api: BinderApiService){}
+  constructor(private api: BinderApiService){}
 
   ngOnInit(): void {
-    this.userId = +this.route.snapshot.paramMap.get('id')!;
+    this.userId = 52;
+    this.api.getFeed(this.userId).subscribe(response => {
+      this.feed = response;
+    });
     this.api.getData(this.userId).subscribe(response => {
       this.user = response;
-    });
+    })
+  }
+
+  like(who: number, whom: number){
+    console.log(who, whom)
   }
 }

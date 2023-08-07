@@ -3,7 +3,8 @@ import { RouterModule, Routes } from '@angular/router';
 import { UserFeedComponent } from './user-feed/user-feed.component';
 
 const routes: Routes = [
-  { path: 'feed/:id', component: UserFeedComponent }
+  { path: 'me', component: UserFeedComponent },
+  { path: '**', redirectTo: "/me"}
 ];
 
 @NgModule({

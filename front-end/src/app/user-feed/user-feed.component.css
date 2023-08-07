@@ -57,3 +57,23 @@ strong {
 h2 {
   text-align: center;
 }
+
+.like-button {
+  color: white;
+  background-color: #ff0000; /* Красный цвет */
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  transition-duration: 0.4s;
+  border-radius: 12px;
+}
+
+.like-button:hover {
+  background-color: #cc0000; /* Темно-красный цвет */
+  color: white;
+}

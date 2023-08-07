@@ -11,4 +11,8 @@ export class BinderApiService {
   getData(id: number): Observable<any> {
     return this.http.get(`http://localhost:8080/api/user/${id}`);
   }
+
+  getFeed(id: number): Observable<any>{
+    return this.http.get(`http://localhost:8080/api/user/${id}/feed`)
+  }
 }

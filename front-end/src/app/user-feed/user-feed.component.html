@@ -1,19 +1,26 @@
-<h2>🌈 Welcome to Binder, {{user.FirstName}}! Swipe right to start your journey of love and connection in our inclusive community. Happy Binding! 🏳️‍🌈</h2>
-<div class="user-container">
-    <div class="user-header">
-      <h2>{{user.DisplayName}}</h2>
-    </div>
-    <div class="user-info">
-      <div class="user-photo">
-        <img *ngIf="user.PhotoUrls && user.PrimaryPhotoIndex < user.PhotoUrls.length" [src]="user.PhotoUrls[user.PrimaryPhotoIndex]" alt="{{user.DisplayName}}">
+<h2>🌈 Welcome to Binder, {{user.FirstName}}! Swipe right to start your journey of love and connection in our inclusive community. Happy Binding! 🏳️‍🌈
+  <div class="user-photo">
+    <img *ngIf="user.PhotoUrls && user.PrimaryPhotoIndex < user.PhotoUrls.length" [src]="user.PhotoUrls[user.PrimaryPhotoIndex]" alt="{{user.DisplayName}}">
+  </div>
+</h2>
+  <div *ngFor="let feedUser of feed">
+    <div class="user-container">
+      <div class="user-header">
+        <h2>{{feedUser.User.DisplayName}}</h2>
       </div>
-      <div class="user-details">
-        <p><strong>Name:</strong> {{user.FirstName}} {{user.LastName}}</p>
-        <p><strong>Email:</strong> {{user.Email}}</p>
-        <p><strong>Date of Birth:</strong> {{user.DateOfBirth | date:'mediumDate'}}</p>
-        <p><strong>Interests:</strong> {{user.Interests.join(', ')}}</p>
-        <p><strong>Distance:</strong> {{user.MaxDistanceKm}} km</p>
-        <p><strong>Age Range:</strong> {{user.MinAge}} - {{user.MaxAge}}</p>
+      <div class="user-info">
+        <div class="user-photo">
+          <img src="{{feedUser.User.PhotoUrls[0]}}" alt="{{feedUser.User.DisplayName}}">
+        </div>
+        <div class="user-details">
+          <p><strong>Name:</strong> {{feedUser.User.FirstName}} {{feedUser.User.LastName}}</p>
+          <p><strong>Date of Birth:</strong> {{feedUser.User.DateOfBirth | date:'mediumDate'}}</p>
+          <p><strong>Interests:</strong> {{feedUser.User.Interests.join(', ')}}</p>
+          <p><strong>Distance:</strong> {{feedUser.DistanceInKm}} km</p>
+          <button class="like-button" (click)="like(user.Id, feedUser.User.UserId)">
+            <i class="fas fa-heart"></i> Like
+          </button>
+        </div>
       </div>
     </div>
   </div>
