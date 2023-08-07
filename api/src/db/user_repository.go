@@ -100,19 +100,6 @@ func (repo UserRepository) UpdateUserGeo(userId int64, countryCode string, state
 	return nil
 }
 
-func (repo UserRepository) GetUserFeed(userId int64) ([]UserDTO, error) {
-	var dbUsers []User
-	if err := repo.db.Select(&dbUsers, "with user_location as (select ug.country_code, ug.state_code, ug.city from user_geos ug where ug.user_id = 52), feed_users as (select ug.user_id, ug.geolocation from user_geos ug where ug.country_code in (select ul.country_code from user_location ul) and ug.state_code in (select ul.state_code from user_location ul) and ug.city in (select ul.city from user_location ul) and ug.user_id <> 52) select ui.id, ui.email, ui.first_name, ui.last_name, ui.display_name, ui.date_of_birth, ui.country, fu.geolocation, ui.interests, ui.photo_urls, ui.primary_photo_index, ui.min_distance_km, ui.max_distance_km, ui.min_age, ui.max_age from users_info ui join feed_users fu on fu.user_id = ui.id;", userId); err != nil {
-		return nil, err
-	}
-
-	users := make([]UserDTO, len(dbUsers))
-	for i, dbUser := range dbUsers {
-		users[i] = mapUser(dbUser)
-	}
-	return users, nil
-}
-
 type Interest string
 
 const (

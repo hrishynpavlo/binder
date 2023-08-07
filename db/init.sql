@@ -79,9 +79,24 @@ CREATE TABLE IF NOT EXISTS user_geos(
     CONSTRAINT fk_user_geo FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS user_feeds(
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    country_code VARCHAR(3) NOT NULL,
+    state_code VARCHAR(128),
+    city VARCHAR(128),
+    feed JSON NOT NULL, 
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    feed_offset SMALLINT NOT NULL DEFAULT 0,
+    is_active BOOLEAN NOT NULL,
+    CONSTRAINT fk_user_feed_users FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE INDEX idx_country_code ON user_geos (country_code);
 CREATE INDEX idx_state_code ON user_geos(state_code);
 CREATE INDEX idx_city ON user_geos (city);
+
+CREATE INDEX idx_feed_activity ON user_feeds(is_active);
 
 CREATE OR REPLACE VIEW users_info AS 
     SELECT u.id, u.email, u.first_name, u.last_name, u.display_name, u.date_of_birth, u.country, u.geolocation, ui.interests, up.photo_urls, up.primary_photo_index, uf.min_distance_km, uf.max_distance_km, uf.min_age, uf.max_age
@@ -205,6 +220,58 @@ BEGIN
     ON CONFLICT (user_id)
     DO
         UPDATE SET geolocation = POINT(latitude_param, longitude_param);
+END;
+$$
+LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION sp_find_users_to_match(
+    user_id_param BIGINT
+) RETURNS TABLE (
+    id BIGINT,
+    email VARCHAR(256),
+    first_name VARCHAR(256),
+    last_name VARCHAR(256),
+    display_name VARCHAR(256),
+    date_of_birth DATE,
+    country_code VARCHAR(3),
+    state_code VARCHAR(128),
+    city VARCHAR(128),
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    interests INTEREST[],
+    photo_urls TEXT[],
+    primary_photo_index SMALLINT,
+    min_distance_km SMALLINT,
+    max_distance_km SMALLINT,
+    min_age SMALLINT,
+    max_age SMALLINT
+)
+AS
+$$
+BEGIN
+    RETURN QUERY
+    WITH user_location AS (SELECT ug.country_code, ug.state_code, ug.city FROM user_geos ug WHERE ug.user_id = user_id_param),
+         feed_users AS (SELECT ug.user_id, ug.geolocation as actual_geolocation, ug.country_code, ug.state_code, ug.city FROM user_geos ug WHERE ug.country_code IN (SELECT ul.country_code FROM user_location ul) AND ug.state_code IN (SELECT ul.state_code FROM user_location ul) AND ug.city IN (SELECT ul.city FROM user_location ul))
+    SELECT ui.id, ui.email, ui.first_name, ui.last_name, ui.display_name, ui.date_of_birth, fu.country_code, fu.state_code, fu.city, fu.actual_geolocation[0] AS latitude, fu.actual_geolocation[1] AS longitude, ui.interests, ui.photo_urls, ui.primary_photo_index, ui.min_distance_km, ui.max_distance_km, ui.min_age, ui.max_age 
+    FROM users_info ui 
+    JOIN feed_users fu ON fu.user_id = ui.id;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION sp_create_feed_snapshot(
+    user_id_param BIGINT,
+    country_code_param VARCHAR(3),
+    state_code_param VARCHAR(128),
+    city_param VARCHAR(128),
+    feed_param JSON
+) RETURNS VOID
+AS
+$$
+BEGIN
+    INSERT INTO user_feeds (user_id, country_code, state_code, city, feed, is_active)
+    VALUES (user_id_param, country_code_param, state_code_param, city_param, feed_param, TRUE);
 END;
 $$
 LANGUAGE plpgsql;

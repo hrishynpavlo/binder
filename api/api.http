@@ -36,7 +36,7 @@ PATCH http://localhost:8080/api/user-photos HTTP/2.0
 content-type: application/json
 
 {
-    "UserId": {{$randomInt 0 100}},
+    "UserId": 258,
     "PhotoUrls": [ "https://images.unsplash.com/photo-1438761681033-6461ffad8d80", "https://images.unsplash.com/photo-1438761681033-6461ffad8d80" ]
 }
 
@@ -51,3 +51,6 @@ content-type: application/json
     "MinAge": {{$randomInt 16 25}},
     "MaxAge": {{$randomInt 26 55}}
 }
+
+###
+GET http://localhost:8080/api/user/52/feed HTTP/2.0

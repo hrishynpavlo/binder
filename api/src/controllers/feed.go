@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"binder_api/db"
+	"binder_api/services"
 	"net/http"
 	"strconv"
 
@@ -8,10 +10,12 @@ import (
 )
 
 type FeedController struct {
+	repo *db.FeedRepository
+	feed services.FeedProvider
 }
 
-func ProvideFeedController() *FeedController {
-	return &FeedController{}
+func ProvideFeedController(repository *db.FeedRepository, feed services.FeedProvider) *FeedController {
+	return &FeedController{repo: repository, feed: feed}
 }
 
 func (controller FeedController) RegisterFeedEndpoints(router *gin.Engine) {
@@ -22,5 +26,8 @@ func (controller FeedController) getUserFeed(c *gin.Context) {
 	idParam := c.Param("id")
 	id, _ := strconv.ParseInt(idParam, 10, 64)
 
-	c.JSON(http.StatusOK, id)
+	feed := controller.feed.GetOrAdd(id)
+
+	c.JSON(http.StatusOK, feed)
+	return
 }

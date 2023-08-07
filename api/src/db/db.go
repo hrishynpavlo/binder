@@ -51,3 +51,24 @@ type UserMatchingInfo struct {
 	MinAge        sql.NullInt16 `db:"min_age"`
 	MaxAge        sql.NullInt16 `db:"max_age"`
 }
+
+type UserWithActualGeo struct {
+	Id                int64          `db:"id"`
+	Email             string         `db:"email"`
+	FirstName         string         `db:"first_name"`
+	LastName          string         `db:"last_name"`
+	DisplayName       string         `db:"display_name"`
+	DateOfBirth       string         `db:"date_of_birth"`
+	CountryCode       string         `db:"country_code"`
+	StateCode         string         `db:"state_code"`
+	City              string         `db:"city"`
+	Latitude          float64        `db:"latitude"`
+	Longitude         float64        `db:"longitude"`
+	Interests         sql.NullString `db:"interests"`
+	PhotoUrls         sql.NullString `db:"photo_urls"`
+	PrimaryPhotoIndex sql.NullInt16  `db:"primary_photo_index"`
+	MinDistanceKm     sql.NullInt16  `db:"min_distance_km"`
+	MaxDistanceKm     sql.NullInt16  `db:"max_distance_km"`
+	MinAge            sql.NullInt16  `db:"min_age"`
+	MaxAge            sql.NullInt16  `db:"max_age"`
+}

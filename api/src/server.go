@@ -6,6 +6,7 @@ import (
 	"binder_api/controllers"
 	"binder_api/db"
 	"binder_api/logging"
+	"binder_api/services"
 	"binder_api/workers"
 
 	"github.com/gin-contrib/cors"
@@ -21,17 +22,18 @@ func main() {
 		fx.Provide(logging.ProviderLogger),
 		fx.Provide(configuration.ProvideConfiguration),
 		fx.Provide(gin.Default),
-		fx.Provide(db.ProvideDb, db.ProvideUserRepository),
+		fx.Provide(db.ProvideDb, db.ProvideUserRepository, db.ProvideFeedRepository),
 		fx.Provide(caching.ProvideRedis),
+		fx.Provide(services.ProvideFeedService),
 		fx.Provide(controllers.ProvideAppController, controllers.ProvideUserController, controllers.ProvideFeedController, controllers.ProvideControllers),
-		fx.Provide(workers.ProvideMatcherWorker, workers.ProvideUserRegisteredChannel, workers.ProvideGeoMatcherWorker),
+		fx.Provide(workers.ProvideUserRegisteredChannel, workers.ProvideGeoMatcherWorker),
 		fx.Invoke(startServer),
 	)
 
 	app.Run()
 }
 
-func startServer(logger *zap.Logger, controllers *controllers.Controllers, router *gin.Engine, matcher *workers.MatcherWorker, geoWorker *workers.GeoWorker) {
+func startServer(logger *zap.Logger, controllers *controllers.Controllers, router *gin.Engine, geoWorker *workers.GeoWorker) {
 
 	router.Use(cors.Default())
 	controllers.RegisterAllEndpoints(router)
