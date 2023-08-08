@@ -8,20 +8,33 @@ import (
 	"binder_api/logging"
 	"binder_api/services"
 	"binder_api/workers"
+	"time"
 
 	"github.com/gin-contrib/cors"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 	"go.uber.org/fx"
+	"go.uber.org/fx/fxevent"
 	"go.uber.org/zap"
 )
+
+func ProvideGinEngine(logger *zap.Logger) *gin.Engine {
+	router := gin.New()
+	router.Use(ginzap.Ginzap(logger, time.RFC3339, true))
+	router.Use(ginzap.RecoveryWithZap(logger, true))
+	return router
+}
 
 func main() {
 
 	app := fx.New(
+		fx.WithLogger(func(log *zap.Logger) fxevent.Logger {
+			return &fxevent.ZapLogger{Logger: log}
+		}),
 		fx.Provide(logging.ProviderLogger),
 		fx.Provide(configuration.ProvideConfiguration),
-		fx.Provide(gin.Default),
+		fx.Provide(ProvideGinEngine),
 		fx.Provide(db.ProvideDb, db.ProvideUserRepository, db.ProvideFeedRepository),
 		fx.Provide(caching.ProvideRedis),
 		fx.Provide(services.ProvideFeedService),

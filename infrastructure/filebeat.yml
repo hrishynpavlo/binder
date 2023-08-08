@@ -1,0 +1,35 @@
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths: ["${BINDER_LOG_PATH}"]
+  json.keys_under_root: true
+  json.add_error_key: true
+
+processors:
+- rename:
+    fields:
+      - from: "L"
+        to: "severity"
+      - from: "M"
+        to: "message"
+      - from: "C"
+        to: "caller"
+      - from: "T"
+        to: "original_log_timestamp"
+    ignore_missing: true
+    fail_on_error: false
+
+output.elasticsearch:
+  hosts: ["${ES_HOST}"]
+  username: "${ES_USERNAME}"
+  password: "${ES_PASSWORD}"
+  index: "binder-api-logs-%{+yyyy.MM.dd}"
+  ssl.verification_mode: "none"
+
+setup.template.name: "binder-api-logs"
+setup.template.pattern: "binder-api-logs-*"
+
+logging.level: debug
+logging.to.files: true
+logging.files.path: /var/log/filebeat
+logging.files.name: filebeat.log
