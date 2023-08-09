@@ -1,6 +1,6 @@
 /* create database */
 
-CREATE DATABASE binder_all;
+/*CREATE DATABASE binder_all;*/
 
 /* then switch to this database */
 /* create tables, enums, views */
@@ -281,6 +281,7 @@ LANGUAGE plpgsql;
 INSERT INTO subscription_plans (name, description, display_name, is_active, refresh_period_in_hours, matching_limit)
 VALUES ('BasePlan', 'Base subscription plan for newcomers', 'Base plan', true, 12, 100);
 
+/*
 DO
 $$
 DECLARE
@@ -310,6 +311,7 @@ BEGIN
     END LOOP;
 END;
 $$;
+*/
 
 CREATE USER binder_app WITH PASSWORD 'binder_best_app';
 
