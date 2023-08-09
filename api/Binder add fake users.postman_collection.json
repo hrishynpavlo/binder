@@ -7,6 +7,93 @@
 	},
 	"item": [
 		{
+			"name": "kafka-connect",
+			"item": [
+				{
+					"name": "Create postgresql connector",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"binder-postgres-connector\",\r\n    \"config\": {\r\n        \"connector.class\": \"io.debezium.connector.postgresql.PostgresConnector\",\r\n        \"database.hostname\": \"binder_postgresql\",\r\n        \"database.port\": \"5432\",\r\n        \"database.user\": \"postgres\",\r\n        \"database.password\": \"postgres\",\r\n        \"database.dbname\": \"binder_all\",\r\n        \"database.server.name\": \"binder_db_server\",\r\n        \"key.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\r\n        \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\r\n        \"key.converter.schemas.enable\": \"true\",\r\n        \"value.converter.schemas.enable\": \"true\",\r\n        \"topic.prefix\": \"binder-app\"\r\n    }\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8083/connectors/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"connectors",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create elasticsearch sink",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"binder-elasticsearch-sink\",\r\n    \"config\": {\r\n        \"connector.class\": \"io.confluent.connect.elasticsearch.ElasticsearchSinkConnector\",\r\n        \"tasks.max\": \"1\",\r\n        \"topics.regex\": \"^binder-app\\\\.public\\\\..*$\",\r\n        \"key.ignore\": \"true\",\r\n        \"type.name\": \"_doc\",\r\n        \"name\": \"binder-elasticsearch-sink\",\r\n        \"connection.url\": \"http://elasticsearch:9200\",\r\n        \"key.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\r\n        \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\r\n        \"key.converter.schemas.enable\": \"true\",\r\n        \"value.converter.schemas.enable\": \"true\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8083/connectors/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"connectors",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get connectors and sinks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8083/connectors/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"connectors",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Create User",
 			"event": [
 				{
