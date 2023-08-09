@@ -24,9 +24,42 @@ services:
       - "8080:8080"
     env_file:
       - .env
+    volumes:
+      - binder_logs:/root/binder-app
     depends_on:
       - binder_postgresql
       - binder_redis
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.10
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+
+  filebeat:
+    build:
+      context: .
+      dockerfile: Dockerfile.filebeat
+    volumes:
+      - binder_logs:/usr/share/filebeat/binder-app-logs
+    depends_on:
+      - elasticsearch
+      - kibana
+
 volumes:
   postgres_data:
+  binder_logs:
+  es_data:

@@ -1,7 +1,8 @@
 filebeat.inputs:
 - type: log
   enabled: true
-  paths: ["${BINDER_LOG_PATH}"]
+  paths:
+    - /usr/share/filebeat/binder-app-logs/*.log
   json.keys_under_root: true
   json.add_error_key: true
 
@@ -20,9 +21,7 @@ processors:
     fail_on_error: false
 
 output.elasticsearch:
-  hosts: ["${ES_HOST}"]
-  username: "${ES_USERNAME}"
-  password: "${ES_PASSWORD}"
+  hosts: ["elasticsearch:9200"]
   index: "binder-api-logs-%{+yyyy.MM.dd}"
   ssl.verification_mode: "none"
 
