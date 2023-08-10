@@ -1,2 +1,0 @@
-kubectl --kubeconfig=/<pathtodirectory>/k8s-1-27-4-do-0-fra1-1691615106272-kubeconfig.yaml get nodes
-
