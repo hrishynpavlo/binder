@@ -8,18 +8,6 @@ metadata:
     k8s-app: filebeat
 data:
   filebeat.yml: |-
-    # filebeat.inputs:
-    # - type: container
-    #   paths:
-    #     - /var/log/containers/*.log
-    #   processors:
-    #     - add_kubernetes_metadata:
-    #         host: ${NODE_NAME}
-    #         matchers:
-    #         - logs_path:
-    #             logs_path: "/var/log/containers/"
-
-    # To enable hints based autodiscover, remove `filebeat.inputs` configuration and uncomment this:
     filebeat.autodiscover:
      providers:
        - type: kubernetes
@@ -33,14 +21,13 @@ data:
     processors:
       - add_cloud_metadata:
       - add_host_metadata:
-
-    # cloud.id: ${ELASTIC_CLOUD_ID}
-    # cloud.auth: ${ELASTIC_CLOUD_AUTH}
+    
+    setup.template.name: "filebeat"
+    setup.template.pattern: "filebeat-*"
 
     output.elasticsearch:
       hosts: ["http://binder-elasticsearch:9200"]
-      # username: ${ELASTICSEARCH_USERNAME}
-      # password: ${ELASTICSEARCH_PASSWORD}
+      index: "filebeat-%{[kubernetes.namespace]}-%{+yyyy.MM.dd}"
 ---
 apiVersion: apps/v1
 kind: DaemonSet
