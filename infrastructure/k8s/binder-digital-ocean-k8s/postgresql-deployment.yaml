@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: binder-postgresql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: binder-postgresql
+  template:
+    metadata:
+      labels:
+        app: binder-postgresql
+    spec:
+      initContainers:
+      - name: clear-lost-found
+        image: busybox
+        command: ["sh", "-c", "rm -rf /var/lib/postgresql/data/lost+found"]
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+
+      containers:
+      - name: binder-postgresql
+        image: registry.digitalocean.com/binder-container-registry/binder-postgresql:latest
+        env:
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          value: "postgres"
+        - name: POSTGRES_DB
+          value: "binder_all"
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        - name: init-sql
+          mountPath: /docker-entrypoint-initdb.d/init.sql
+          subPath: init.sql
+
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: pvc-postgresql
+      - name: init-sql
+        configMap:
+          name: postgres-init-sql

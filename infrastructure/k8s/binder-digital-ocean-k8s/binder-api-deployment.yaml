@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: binder-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: binder-api
+  template:
+    metadata:
+      labels:
+        app: binder-api
+    spec:
+      containers:
+      - name: binder-api
+        image: registry.digitalocean.com/binder-container-registry/binder-api:latest
+        env:
+        - name: BINDER_DB_CONNECTION_STRING
+          value: "postgres://binder_app:binder_best_app@binder-postgresql:5432/binder_all?sslmode=disable"
+        - name: BINDER_REDIS_CONNECTION_STRING
+          value: "redis://binder-redis:6379/0"
+        - name: BINDER_HERE_GEO_TOKEN
+          value: "5R5QYqgzBR-nlfXsr1su3PTi8PRJFpLY5_XYZX94Rqk"
+        ports:
+        - containerPort: 8080

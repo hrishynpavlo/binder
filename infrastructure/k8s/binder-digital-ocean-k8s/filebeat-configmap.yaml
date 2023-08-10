@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-config
+data:
+  filebeat.yml: |
+    filebeat.inputs:
+    - type: container
+      paths:
+        - /var/log/containers/binder-api-*.log
+    output.elasticsearch:
+      hosts: ["http://binder-elasticsearch:9200"]
+    logging.level: debug

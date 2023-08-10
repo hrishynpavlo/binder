@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: binder-kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: binder-kibana
+  template:
+    metadata:
+      labels:
+        app: binder-kibana
+    spec:
+      containers:
+      - name: binder-kibana
+        image: docker.elastic.co/kibana/kibana:7.17.10
+        ports:
+        - containerPort: 5601
+        env:
+        - name: ELASTICSEARCH_HOSTS
+          value: "http://binder-elasticsearch:9200" 
