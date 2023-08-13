@@ -31,8 +31,5 @@ jobs:
             - name: Save DigitalOcean kubeconfig with short-lived credentials
               run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 ${{ secrets.DO_CLUSTER_NAME }}
 
-            - name: Deploy to DigitalOcean Kubernetes
-              run: kubectl apply -f ./infrastructure/k8s/binder-digital-ocean-k8s/binder-api-deployment.yaml
-
-            - name: Verify deployment
-              run: kubectl rollout status deployment/binder-api
+            - name: Restard pods
+              run: kubectl delete pods -l app=binder-api
