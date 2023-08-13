@@ -16,7 +16,7 @@ func ProviderLogger() *zap.Logger {
 	//fileLogger := zapcore.NewCore(encoder, zapcore.AddSync(file), zapcore.DebugLevel)
 	consoleLogger := zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zapcore.DebugLevel)
 
-	// add file logger if need
+	/// add file logger if need
 	core := zapcore.NewTee(consoleLogger)
 	logger := zap.New(core, zap.AddCaller())
 
