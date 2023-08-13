@@ -1,11 +1,11 @@
-name: Build and push docker image to Digital Ocean Container Registry
+name: Build and push api docker image to Digital Ocean Container Registry
 
 on:
     push:
         branches:
             - develop
         paths: 
-            - '/api/src/**'
+            - 'api/src/**'
 
 jobs:
     build-and-push:
