@@ -6,7 +6,7 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o binder .
 
 FROM debian:buster-slim
-ENV BINDER_COMMIT_REVISION=${BINDER_COMMIT_REVISION}
+ENV BINDER_COMMIT_REVISION $BINDER_COMMIT_REVISION
 RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
 WORKDIR /root/binder-app
 COPY --from=build-env /app/binder .
