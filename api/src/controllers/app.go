@@ -10,6 +10,7 @@ import (
 
 type AppController struct {
 	Configuration *configuration.AppConfiguration
+	StartTime     time.Time
 }
 
 func (controller AppController) GetAppRevision(c *gin.Context) {
@@ -21,5 +22,5 @@ func (controller AppController) RegisterAppEndpoints(router *gin.Engine) {
 }
 
 func ProvideAppController(config *configuration.AppConfiguration) *AppController {
-	return &AppController{Configuration: config}
+	return &AppController{Configuration: config, StartTime: time.Now().UTC()}
 }
