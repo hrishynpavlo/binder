@@ -3,6 +3,7 @@ package controllers
 import (
 	"binder_api/configuration"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,7 +13,7 @@ type AppController struct {
 }
 
 func (controller AppController) GetAppRevision(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"commitSha": controller.Configuration.CommitRevision})
+	c.JSON(http.StatusOK, gin.H{"commitSha": controller.Configuration.CommitRevision, "startTime": time.Now().UTC()})
 }
 
 func (controller AppController) RegisterAppEndpoints(router *gin.Engine) {
