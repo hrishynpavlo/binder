@@ -28,3 +28,4 @@ jobs:
                 file: ./api/Dockerfile
                 build-args: BINDER_COMMIT_REVISION=${{github.sha}}
                 tags: registry.digitalocean.com/${{secrets.DO_REGISTRY}}/binder-api:latest
+                platform: linux/amd64
