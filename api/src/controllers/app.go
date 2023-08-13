@@ -14,7 +14,7 @@ type AppController struct {
 }
 
 func (controller AppController) GetAppRevision(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"commitSha": controller.Configuration.CommitRevision, "startTime": time.Now().UTC()})
+	c.JSON(http.StatusOK, gin.H{"commitSha": controller.Configuration.CommitRevision, "startTime": controller.StartTime})
 }
 
 func (controller AppController) RegisterAppEndpoints(router *gin.Engine) {
