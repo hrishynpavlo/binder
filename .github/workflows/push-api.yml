@@ -34,5 +34,5 @@ jobs:
             - name: Restard pods
               run: kubectl delete pods -l app=binder-api
 
-            - name: Clean up container registry
-              run: doctl registry garbage-collection start --force
+            # - name: Clean up container registry
+            #   run: doctl registry garbage-collection start --force
