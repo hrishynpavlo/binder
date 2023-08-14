@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: binder-ingress-app-revision
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /app-revision
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: thebinderapp.com
+    http:
+      paths:
+      - path: /api/app-revision
+        pathType: Prefix
+        backend:
+          service:
+            name: binder-api-public
+            port:
+              number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: binder-ingress-general
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /api/$1
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: thebinderapp.com
+    http:
+      paths:
+      - path: /api/(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: binder-api-public
+            port:
+              number: 80
