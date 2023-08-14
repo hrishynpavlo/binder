@@ -21,13 +21,40 @@ data:
     processors:
       - add_cloud_metadata:
       - add_host_metadata:
-    
-    setup.template.name: "filebeat"
-    setup.template.pattern: "filebeat-*"
+      - decode_json_fields:
+          fields: ["message"]
+          when: 
+            equals:
+              kubernetes.container.name: "binder-api"
+      - rename:
+          fields:
+            - from: "message.L"
+              to: "message.severity"
+            - from: "message.C"
+              to: "message.stack_trace"
+            - from: "message.M"
+              to: "message.original_message"
+          ignore_missing: true
+          fail_on_error: false
+          when:
+            equals:
+              kubernetes.container.name: "binder-api"
+      - copy_fields:
+          fields:
+            - from: "message.severity"
+              to: "severity"
+          ignore_missing: true
+          fail_on_error: false
+          when:
+            equals:
+              kubernetes.container.name: "binder-api"
 
     output.elasticsearch:
       hosts: ["http://binder-elasticsearch:9200"]
-      index: "filebeat-%{[kubernetes.namespace]}-%{+yyyy.MM.dd}"
+      indices: 
+        - index: "binder-api-%{[agent.version]}-%{+yyyy.MM.dd}"
+          when.equals:
+            kubernetes.container.name: "binder-api"
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -58,13 +85,13 @@ spec:
         ]
         env:
         - name: ELASTICSEARCH_HOST
-          value: elasticsearch
+          value: binder-elasticsearch
         - name: ELASTICSEARCH_PORT
           value: "9200"
         - name: ELASTICSEARCH_USERNAME
-          value: elastic
+          value: 
         - name: ELASTICSEARCH_PASSWORD
-          value: changeme
+          value: 
         - name: ELASTIC_CLOUD_ID
           value:
         - name: ELASTIC_CLOUD_AUTH
