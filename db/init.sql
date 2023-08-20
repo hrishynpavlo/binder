@@ -278,6 +278,19 @@ END;
 $$
 LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION sp_login_user(
+    email_param VARCHAR(512),
+    password_hash_param VARCHAR
+) RETURNS TABLE (id BIGINT)
+AS
+$$
+BEGIN
+    RETURN QUERY 
+    SELECT id FROM users WHERE email = email_param AND password_hash = password_hash_param;
+END;
+$$
+LANGUAGE plpgsql;
+
 /*add fake data*/
 
 INSERT INTO subscription_plans (name, description, display_name, is_active, refresh_period_in_hours, matching_limit)

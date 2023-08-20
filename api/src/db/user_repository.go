@@ -100,6 +100,17 @@ func (repo UserRepository) UpdateUserGeo(userId int64, countryCode string, state
 	return nil
 }
 
+func (repo UserRepository) GetUserIdByEmailAndPassword(email string, passwordHash string) (int64, error) {
+	result := UserId{}
+	err := repo.db.Get(&result, "SELECT * FROM sp_login_user($1, $2)", email, passwordHash)
+	if err != nil {
+		repo.logger.Error("GetUserIdByEmailAndPassword() db error", zap.Error(err))
+		return 0, err
+	}
+
+	return result.ID, nil
+}
+
 type Interest string
 
 const (
@@ -187,4 +198,8 @@ func parseInterests(original string) []Interest {
 		interests[i] = Interest(str)
 	}
 	return interests
+}
+
+type UserId struct {
+	ID int64 `db:"id"`
 }
