@@ -19,15 +19,15 @@ type UserController struct {
 }
 
 type CreateUserRequest struct {
-	Email        string
-	PasswordHash string
-	FirstName    string
-	LastName     string
-	DisplayName  string
-	DateOfBirth  string
-	Country      string
-	Latitude     float64
-	Longitude    float64
+	Email       string
+	Password    string
+	FirstName   string
+	LastName    string
+	DisplayName string
+	DateOfBirth string
+	Country     string
+	Latitude    float64
+	Longitude   float64
 }
 
 type SetUserInterestRequest struct {
@@ -78,7 +78,7 @@ func (controller UserController) CreateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := controller.db.CreateUser(req.Email, req.PasswordHash, req.FirstName, req.LastName, req.DisplayName, req.DateOfBirth, req.Country, req.Latitude, req.Longitude)
+	user, err := controller.db.CreateUser(req.Email, req.Password, req.FirstName, req.LastName, req.DisplayName, req.DateOfBirth, req.Country, req.Latitude, req.Longitude)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err})
@@ -166,7 +166,12 @@ func (controller UserController) Login(c *gin.Context) {
 		return
 	}
 
-	userId, _ := controller.db.GetUserIdByEmailAndPassword(req.Email, req.Password)
+	userId, err := controller.db.GetUserIdByEmailAndPassword(req.Email, req.Password)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "incorrect password"})
+		return
+	}
+
 	jwt := controller.authService.GenerateToken(db.UserDTO{Id: userId})
 	c.SetCookie("binder_jwt", jwt, 3600, "", "localhost", false, false)
 

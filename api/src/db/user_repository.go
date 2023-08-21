@@ -7,6 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserRepository struct {
@@ -43,10 +44,11 @@ func (repo UserRepository) GetUserById(userId int64) (UserDTO, error) {
 	return mapUser(user), nil
 }
 
-func (repo UserRepository) CreateUser(email string, passwordHash string, firstName string, lastName string, displayName string, dateOfBirth string, country string, latitude float64, longitude float64) (UserDTO, error) {
+func (repo UserRepository) CreateUser(email string, password string, firstName string, lastName string, displayName string, dateOfBirth string, country string, latitude float64, longitude float64) (UserDTO, error) {
+	passwordHash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	user := User{}
 	err := repo.db.Get(&user, "SELECT * FROM sp_create_user($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-		email, passwordHash, firstName, lastName, displayName, dateOfBirth, country, latitude, longitude)
+		email, string(passwordHash), firstName, lastName, displayName, dateOfBirth, country, latitude, longitude)
 	if err != nil {
 		repo.logger.Error("CreateUser() failed",
 			zap.Error(err),
@@ -100,11 +102,16 @@ func (repo UserRepository) UpdateUserGeo(userId int64, countryCode string, state
 	return nil
 }
 
-func (repo UserRepository) GetUserIdByEmailAndPassword(email string, passwordHash string) (int64, error) {
-	result := UserId{}
-	err := repo.db.Get(&result, "SELECT * FROM sp_login_user($1, $2)", email, passwordHash)
+func (repo UserRepository) GetUserIdByEmailAndPassword(email string, password string) (int64, error) {
+	result := UserIdentity{}
+	err := repo.db.Get(&result, "SELECT * FROM sp_login_user($1)", email)
 	if err != nil {
 		repo.logger.Error("GetUserIdByEmailAndPassword() db error", zap.Error(err))
+		return 0, err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(result.PasswordHash), []byte(password)); err != nil {
+		repo.logger.Error("Incorrect password", zap.Error(err))
 		return 0, err
 	}
 
@@ -200,6 +207,7 @@ func parseInterests(original string) []Interest {
 	return interests
 }
 
-type UserId struct {
-	ID int64 `db:"id"`
+type UserIdentity struct {
+	ID           int64  `db:"id"`
+	PasswordHash string `db:"password_hash"`
 }

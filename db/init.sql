@@ -279,14 +279,13 @@ $$
 LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION sp_login_user(
-    email_param VARCHAR(512),
-    password_hash_param VARCHAR
-) RETURNS TABLE (id BIGINT)
+    email_param VARCHAR(512)
+) RETURNS TABLE (id BIGINT, password_hash VARCHAR)
 AS
 $$
 BEGIN
     RETURN QUERY 
-    SELECT id FROM users WHERE email = email_param AND password_hash = password_hash_param;
+    SELECT u.id, u.password_hash FROM users u WHERE u.email = email_param;
 END;
 $$
 LANGUAGE plpgsql;
