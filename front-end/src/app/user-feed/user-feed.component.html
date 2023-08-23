@@ -1,8 +1,11 @@
-<h2>🌈 Welcome to Binder, {{user.FirstName}}! Swipe right to start your journey of love and connection in our inclusive community. Happy Binding! 🏳️‍🌈
-  <div class="user-photo">
-    <img *ngIf="user.PhotoUrls && user.PrimaryPhotoIndex < user.PhotoUrls.length" [src]="user.PhotoUrls[user.PrimaryPhotoIndex]" alt="{{user.DisplayName}}">
-  </div>
-</h2>
+<div *ngIf="user">
+  <h2>🌈 Welcome to Binder, {{user.FirstName}}! Swipe right to start your journey of love and connection in our inclusive community. Happy Binding! 🏳️‍🌈
+    <div class="user-photo">
+      <img *ngIf="user.PhotoUrls && user.PrimaryPhotoIndex < user.PhotoUrls.length" [src]="user.PhotoUrls[user.PrimaryPhotoIndex]" alt="{{user.DisplayName}}">
+    </div>
+  </h2>
+</div>
+<div *ngIf="feed">
   <div *ngFor="let feedUser of feed">
     <div class="user-container">
       <div class="user-header">
@@ -24,3 +27,4 @@
       </div>
     </div>
   </div>
+</div>

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { BinderApiService } from './binder-api-service';
+import { BinderApiService } from '../services/binder-api-service';
 
 @Component({
   selector: 'app-user-feed',
@@ -15,7 +15,7 @@ export class UserFeedComponent implements OnInit {
 
   ngOnInit(): void {
     this.userId = 52;
-    this.api.getFeed(this.userId).subscribe(response => {
+    this.api.getFeed().subscribe(response => {
       this.feed = response;
     });
     this.api.getData(this.userId).subscribe(response => {
