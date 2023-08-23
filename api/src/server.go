@@ -4,6 +4,7 @@ import (
 	"binder_api/caching"
 	"binder_api/configuration"
 	"binder_api/controllers"
+	"binder_api/controllers/auth"
 	"binder_api/db"
 	"binder_api/logging"
 	"binder_api/services"
@@ -38,7 +39,7 @@ func main() {
 		fx.Provide(db.ProvideDb, db.ProvideUserRepository, db.ProvideFeedRepository),
 		fx.Provide(caching.ProvideRedis),
 		fx.Provide(services.ProvideFeedService),
-		fx.Provide(controllers.ProvideAppController, controllers.ProvideUserController, controllers.ProvideFeedController, controllers.ProvideControllers),
+		fx.Provide(auth.ProvideAuthService, controllers.ProvideAppController, controllers.ProvideUserController, controllers.ProvideFeedController, controllers.ProvideControllers),
 		fx.Provide(workers.ProvideUserRegisteredChannel, workers.ProvideGeoMatcherWorker),
 		fx.Invoke(startServer),
 	)

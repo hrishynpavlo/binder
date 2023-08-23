@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"binder_api/controllers/auth"
 	"binder_api/db"
 	"binder_api/workers"
 	"net/http"
@@ -14,18 +15,19 @@ type UserController struct {
 	logger                *zap.Logger
 	db                    *db.UserRepository
 	userRegisteredChannel chan workers.UserRegisteredEvent
+	authService           *auth.AuthService
 }
 
 type CreateUserRequest struct {
-	Email        string
-	PasswordHash string
-	FirstName    string
-	LastName     string
-	DisplayName  string
-	DateOfBirth  string
-	Country      string
-	Latitude     float64
-	Longitude    float64
+	Email       string
+	Password    string
+	FirstName   string
+	LastName    string
+	DisplayName string
+	DateOfBirth string
+	Country     string
+	Latitude    float64
+	Longitude   float64
 }
 
 type SetUserInterestRequest struct {
@@ -48,12 +50,13 @@ type SetUserFiltersRequest struct {
 
 func (controller UserController) RegisterUserEndpoints(router *gin.Engine) {
 	api := router.Group("/api")
-	api.GET("/user/list", controller.GetUserList)
+	api.GET("/user/list", controller.authService.AuthMiddleware, controller.GetUserList)
 	api.GET("/user/:id", controller.GetUser)
 	api.POST("/user", controller.CreateUser)
 	api.PATCH("/user-interests", controller.UpdateUserInterests)
 	api.PATCH("/user-photos", controller.UpdateUserPhoto)
 	api.PATCH("/user-filters", controller.UpdateUserFilter)
+	api.POST("/login", controller.Login)
 }
 
 func (controller UserController) GetUserList(c *gin.Context) {
@@ -75,7 +78,7 @@ func (controller UserController) CreateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := controller.db.CreateUser(req.Email, req.PasswordHash, req.FirstName, req.LastName, req.DisplayName, req.DateOfBirth, req.Country, req.Latitude, req.Longitude)
+	user, err := controller.db.CreateUser(req.Email, req.Password, req.FirstName, req.LastName, req.DisplayName, req.DateOfBirth, req.Country, req.Latitude, req.Longitude)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err})
@@ -84,6 +87,10 @@ func (controller UserController) CreateUser(c *gin.Context) {
 
 	event := workers.UserRegisteredEvent{UserId: user.Id, Latitude: req.Latitude, Longitude: req.Longitude}
 	controller.userRegisteredChannel <- event
+
+	jwt := controller.authService.GenerateToken(user)
+	c.SetCookie("binder_jwt", jwt, 3600, "", "localhost", false, false)
+
 	c.JSON(http.StatusCreated, user)
 }
 
@@ -151,6 +158,31 @@ func (controller UserController) GetUser(c *gin.Context) {
 	return
 }
 
-func ProvideUserController(logger *zap.Logger, db *db.UserRepository, userRegisteredChannel chan workers.UserRegisteredEvent) *UserController {
-	return &UserController{logger: logger, db: db, userRegisteredChannel: userRegisteredChannel}
+func (controller UserController) Login(c *gin.Context) {
+	req := LoginRequest{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		controller.logger.Error("", zap.Error(err))
+		c.JSON(http.StatusBadRequest, gin.H{})
+		return
+	}
+
+	userId, err := controller.db.GetUserIdByEmailAndPassword(req.Email, req.Password)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "incorrect password"})
+		return
+	}
+
+	jwt := controller.authService.GenerateToken(db.UserDTO{Id: userId})
+	c.SetCookie("binder_jwt", jwt, 3600, "", "localhost", false, false)
+
+	c.JSON(http.StatusOK, gin.H{"message": "login successfull"})
+}
+
+func ProvideUserController(logger *zap.Logger, db *db.UserRepository, userRegisteredChannel chan workers.UserRegisteredEvent, auth *auth.AuthService) *UserController {
+	return &UserController{logger: logger, db: db, userRegisteredChannel: userRegisteredChannel, authService: auth}
+}
+
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
