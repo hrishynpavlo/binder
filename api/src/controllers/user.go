@@ -89,9 +89,8 @@ func (controller UserController) CreateUser(c *gin.Context) {
 	controller.userRegisteredChannel <- event
 
 	jwt := controller.authService.GenerateToken(user)
-	c.SetCookie("binder_jwt", jwt, 3600, "", "localhost", false, false)
 
-	c.JSON(http.StatusCreated, user)
+	c.JSON(http.StatusCreated, gin.H{"user": user, "access_token": jwt})
 }
 
 func (controller UserController) UpdateUserInterests(c *gin.Context) {
@@ -173,9 +172,8 @@ func (controller UserController) Login(c *gin.Context) {
 	}
 
 	jwt := controller.authService.GenerateToken(db.UserDTO{Id: userId})
-	c.SetCookie("binder_jwt", jwt, 3600, "", "localhost", false, false)
 
-	c.JSON(http.StatusOK, gin.H{"message": "login successfull"})
+	c.JSON(http.StatusOK, gin.H{"access_token": jwt})
 }
 
 func ProvideUserController(logger *zap.Logger, db *db.UserRepository, userRegisteredChannel chan workers.UserRegisteredEvent, auth *auth.AuthService) *UserController {
