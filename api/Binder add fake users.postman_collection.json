@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "6a5fd8f3-6756-439d-b853-9c36ae9b0994",
+		"_postman_id": "4d791714-2b10-4258-b282-cc35a1c59060",
 		"name": "Binder add fake users",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "2514459"
@@ -189,7 +189,18 @@
 							"\r",
 							"let index = Number(pm.collectionVariables.get(\"index\"));\r",
 							"++index;\r",
-							"pm.collectionVariables.set(\"index\", index);"
+							"pm.collectionVariables.set(\"index\", index);\r",
+							"\r",
+							"const cookie = pm.response.headers.get('Set-Cookie');\r",
+							"\r",
+							"const str = cookie.split('; ');\r",
+							"const result = {};\r",
+							"for (let i in str) {\r",
+							"    const cur = str[i].split('=');\r",
+							"    result[cur[0]] = cur[1];\r",
+							"}\r",
+							"\r",
+							"pm.collectionVariables.set(\"jwt\", result.binder_jwt);"
 						],
 						"type": "text/javascript"
 					}
@@ -200,7 +211,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"FirstName\": \"{{firstName}}\",\r\n    \"LastName\": \"{{lastName}}\",\r\n    \"PasswordHash\": \"31ae4fea241222fd2a7dab1a134ef397\",\r\n    \"DisplayName\": \"{{nickName}} {{firstName}}\",\r\n    \"Country\": \"USA\",\r\n    \"Email\": \"user{{index}}@example.com\",\r\n    \"DateOfBirth\": \"{{dateOfBirth}}\",\r\n    \"Latitude\": {{latitude}},\r\n    \"Longitude\": {{longitude}}\r\n}",
+					"raw": "{\r\n    \"FirstName\": \"{{firstName}}\",\r\n    \"LastName\": \"{{lastName}}\",\r\n    \"Password\": \"qwertyui123\",\r\n    \"DisplayName\": \"{{nickName}} {{firstName}}\",\r\n    \"Country\": \"USA\",\r\n    \"Email\": \"example{{index}}@example.com\",\r\n    \"DateOfBirth\": \"{{dateOfBirth}}\",\r\n    \"Latitude\": {{latitude}},\r\n    \"Longitude\": {{longitude}}\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -208,15 +219,42 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/api/user",
+					"raw": "http://{{binder_api_host}}/api/user",
 					"protocol": "http",
 					"host": [
-						"localhost"
+						"{{binder_api_host}}"
 					],
-					"port": "8080",
 					"path": [
 						"api",
 						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"Email\": \"example{{index}}@example.com\",\r\n    \"Password\": \"qwertyui123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{binder_api_host}}/api/login",
+					"protocol": "http",
+					"host": [
+						"{{binder_api_host}}"
+					],
+					"path": [
+						"api",
+						"login"
 					]
 				}
 			},
@@ -252,7 +290,13 @@
 			],
 			"request": {
 				"method": "PATCH",
-				"header": [],
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
 					"raw": "{\r\n    \"UserId\": {{userId}},\r\n    \"Interests\": {{interests}}\r\n}",
@@ -263,12 +307,11 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/api/user-interests",
+					"raw": "http://{{binder_api_host}}/api/user-interests",
 					"protocol": "http",
 					"host": [
-						"localhost"
+						"{{binder_api_host}}"
 					],
-					"port": "8080",
 					"path": [
 						"api",
 						"user-interests"
@@ -308,7 +351,13 @@
 			],
 			"request": {
 				"method": "PATCH",
-				"header": [],
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
 					"raw": "{\r\n    \"UserId\": {{userId}},\r\n    \"PhotoUrls\": {{photoUrls}}\r\n}",
@@ -319,15 +368,67 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/api/user-photos",
+					"raw": "http://{{binder_api_host}}/api/user-photos",
 					"protocol": "http",
 					"host": [
-						"localhost"
+						"{{binder_api_host}}"
 					],
-					"port": "8080",
 					"path": [
 						"api",
 						"user-photos"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get all users",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://{{binder_api_host}}/api/user/list",
+					"protocol": "http",
+					"host": [
+						"{{binder_api_host}}"
+					],
+					"path": [
+						"api",
+						"user",
+						"list"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get user feed",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://{{binder_api_host}}/api/user/35/feed",
+					"protocol": "http",
+					"host": [
+						"{{binder_api_host}}"
+					],
+					"path": [
+						"api",
+						"user",
+						"35",
+						"feed"
 					]
 				}
 			},
@@ -358,6 +459,11 @@
 		{
 			"key": "index",
 			"value": "0",
+			"type": "string"
+		},
+		{
+			"key": "jwt",
+			"value": "",
 			"type": "string"
 		}
 	]
