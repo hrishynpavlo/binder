@@ -50,6 +50,7 @@ func main() {
 func startServer(logger *zap.Logger, controllers *controllers.Controllers, router *gin.Engine, geoWorker *workers.GeoWorker) {
 
 	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
 	corsConfig.AddAllowHeaders("Authorization")
 	router.Use(cors.New(corsConfig))
 

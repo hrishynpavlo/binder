@@ -22,5 +22,7 @@ spec:
           value: "redis://binder-redis:6379/0"
         - name: BINDER_HERE_GEO_TOKEN
           value: "5R5QYqgzBR-nlfXsr1su3PTi8PRJFpLY5_XYZX94Rqk"
+        - name: BINDER_JWT_SECRET_KEY
+          value: "Tg0Kw60NCmoNChENCsOLDQoADQp0DQpGDQoZDQrCrA0Kw6QNCsOiDQpNDQrCpA0KeQ0Kwo0NCnQNCsOdDQrChQ0KEQ0Kw5ENClcNCk4NCmwNCkkNCsKMDQptDQp+DQoSDQoDDQpBDQpu"
         ports:
         - containerPort: 8080
