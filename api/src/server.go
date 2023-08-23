@@ -49,7 +49,11 @@ func main() {
 
 func startServer(logger *zap.Logger, controllers *controllers.Controllers, router *gin.Engine, geoWorker *workers.GeoWorker) {
 
-	router.Use(cors.Default())
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowCredentials = true
+	corsConfig.AllowAllOrigins = true
+	router.Use(cors.New(corsConfig))
+
 	controllers.RegisterAllEndpoints(router)
 	logger.Debug("All endpoints registered")
 
