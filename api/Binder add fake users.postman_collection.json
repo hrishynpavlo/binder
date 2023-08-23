@@ -419,15 +419,13 @@
 					}
 				],
 				"url": {
-					"raw": "http://{{binder_api_host}}/api/user/35/feed",
+					"raw": "http://{{binder_api_host}}/api/feed",
 					"protocol": "http",
 					"host": [
 						"{{binder_api_host}}"
 					],
 					"path": [
 						"api",
-						"user",
-						"35",
 						"feed"
 					]
 				}
