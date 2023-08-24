@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { BinderApiService } from '../services/binder-api-service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-login-page',
@@ -11,7 +12,7 @@ import { BinderApiService } from '../services/binder-api-service';
 export class LoginPageComponent implements OnInit {
   loginForm: FormGroup;
 
-  constructor(private api: BinderApiService, private router: Router){}
+  constructor(private api: BinderApiService, private router: Router, private authService: AuthService){}
 
   ngOnInit(): void {
     this.loginForm = new FormGroup({
@@ -28,7 +29,7 @@ export class LoginPageComponent implements OnInit {
       }
 
       this.api.login(data).subscribe(loginResponse => {
-        this.api.setToken(loginResponse.body['access_token']);
+        this.authService.setToken(loginResponse.body['access_token']);
         this.router.navigate(['/me']);
       });
     }

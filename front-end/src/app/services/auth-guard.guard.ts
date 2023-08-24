@@ -1,14 +1,13 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { BinderApiService } from './binder-api-service';
-
+import { AuthService } from './auth.service';
 
 
 export const authGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
-  const api = inject(BinderApiService);
+  const authService = inject(AuthService);
 
-  if(!api.getToken()){
+  if(!authService.getToken()){
     router.navigate(['/login']);
     return false;
   }

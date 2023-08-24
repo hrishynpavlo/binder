@@ -8,12 +8,14 @@ import { UserFeedComponent } from './user-feed/user-feed.component';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { LoginPageComponent } from './login-page/login-page.component';
 import { AuthInterceptor } from './services/auth.interceptor';
+import { RegistrationPageComponent } from './registration-page/registration-page.component';
  
 @NgModule({
   declarations: [
     AppComponent,
     UserFeedComponent,
-    LoginPageComponent
+    LoginPageComponent,
+    RegistrationPageComponent
   ],
   imports: [
     BrowserModule,

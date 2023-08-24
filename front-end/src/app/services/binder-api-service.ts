@@ -6,7 +6,6 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class BinderApiService {
-  private accessToken: string;
 
   constructor(private http: HttpClient) {}
 
@@ -22,11 +21,7 @@ export class BinderApiService {
     return this.http.post(`http://thebinderapp.com/api/login`, data, { observe: 'response' })
   }
 
-  setToken(token: string){
-    this.accessToken = token;
-  }
-
-  getToken(): string{
-    return this.accessToken;
+  createUser(user: any): Observable<any>{
+    return this.http.post(`http://thebinderapp.com/api/user`, user);
   }
 }

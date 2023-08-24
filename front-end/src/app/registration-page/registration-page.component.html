@@ -1,0 +1,64 @@
+<div class="container">
+    <form class="offset-3 col-6" [formGroup]="registrationForm" (ngSubmit)="onSubmit()">
+        <div>
+            <label for="firstName" class="form-label fs-5">First Name:</label>
+            <input type="text" id="firstName" formControlName="firstName" class="form-control">
+            <div *ngIf="registrationForm.controls['firstName'].errors && registrationForm.controls['firstName'].touched">
+                <span class="text-danger" *ngIf="registrationForm.controls['firstName'].errors['required']">First Name is required.</span>
+                <span class="text-danger" *ngIf="registrationForm.controls['firstName'].errors['minlength']">First Name min length is 2 symbols.</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="lastName" class="form-label fs-5">Last Name:</label>
+            <input type="text" id="lastName" formControlName="lastName" class="form-control">
+            <div *ngIf="registrationForm.controls['lastName'].errors && registrationForm.controls['lastName'].touched">
+                <span class="text-danger" *ngIf="registrationForm.controls['lastName'].errors['required']">Last Name is required.</span>
+                <span class="text-danger" *ngIf="registrationForm.controls['lastName'].errors['minlength']">Last Name min length is 2 symbols.</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="email" class="form-label fs-5">Email:</label>
+            <input type="email" id="email" formControlName="email" class="form-control">
+            <div *ngIf="registrationForm.controls['email'].errors && registrationForm.controls['email'].touched">
+                <span class="text-danger" *ngIf="registrationForm.controls['email'].errors['required']">Email is required.</span>
+                <span class="text-danger" *ngIf="registrationForm.controls['email'].errors['email']">Not a valid email.</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="password" class="form-label fs-5">Password: </label>
+            <input type="password" id="password" formControlName="password" class="form-control">
+            <div *ngIf="registrationForm.controls['password'].errors && registrationForm.controls['password'].touched">
+                <span class="text-danger" *ngIf="registrationForm.controls['password'].errors['required']">Password is required.</span>
+                <span class="text-danger" *ngIf="registrationForm.controls['password'].errors['minlength']">Password has to be at least 6 symbols.</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="displayName" class="form-label fs-5">Display Name:</label>
+            <input type="text" id="displayName" formControlName="displayName" class="form-control">
+        </div>
+
+        <div>
+            <label for="country" class="form-label fs-5">Country:</label>
+            <input type="text" id="country" formControlName="country" class="form-control">
+            <div *ngIf="registrationForm.controls['country'].errors && registrationForm.controls['country'].touched">
+                <span class="text-danger" *ngIf="registrationForm.controls['country'].errors['required']">Country is required.</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="dateOfBirth" class="form-label fs-5">Date of birth:</label>
+            <input type="date" id="dateOfBirth" formControlName="dateOfBirth" class="form-control">
+            <div *ngIf="registrationForm.controls['dateOfBirth'].errors && registrationForm.controls['dateOfBirth'].touched">
+                <span class="text-danger" *ngIf="registrationForm.controls['dateOfBirth'].errors['required']">Email is required.</span>
+            </div>
+        </div>
+
+        <div class="mt-3 text-end">
+            <button class="btn btn-primary" type="submit" [disabled]="!registrationForm.valid">Sign up</button>
+        </div>
+    </form>
+</div>
